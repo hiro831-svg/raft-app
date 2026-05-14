@@ -1,0 +1,32 @@
+node_modules/
+.expo/
+dist/
+web-build/
+.env
+*.local
+
+# Native builds
+ios/
+android/
+
+# Debug
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# macOS
+.DS_Store
+*.pem
+
+# Editor
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
