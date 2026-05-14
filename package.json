@@ -28,7 +28,6 @@
     "@supabase/supabase-js": "^2.43.4",
     "nativewind": "^4.0.36",
     "tailwindcss": "^3.4.3",
-    "@stripe/stripe-react-native": "0.37.3",
     "react-native-url-polyfill": "^2.0.0",
     "@react-native-async-storage/async-storage": "1.23.1",
     "react-native-svg": "15.2.0",

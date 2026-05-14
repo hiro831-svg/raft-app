@@ -4,59 +4,22 @@
     "slug": "craftshare",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1A0A00"
-    },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.craftshare.app",
-      "infoPlist": {
-        "NSCameraUsageDescription": "CraftShare uses your camera to capture images for craft orders.",
-        "NSPhotoLibraryUsageDescription": "CraftShare accesses your photos to upload design images for orders."
-      }
+      "bundleIdentifier": "com.craftshare.app"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1A0A00"
-      },
-      "package": "com.craftshare.app",
-      "permissions": [
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "CAMERA"
-      ]
+      "package": "com.craftshare.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "CraftShare accesses your photos to upload design images."
-        }
-      ],
-      [
-        "@stripe/stripe-react-native",
-        {
-          "merchantIdentifier": "merchant.com.craftshare.app",
-          "enableGooglePay": false
-        }
-      ]
+      "expo-image-picker"
     ],
-    "scheme": "craftshare",
-    "extra": {
-      "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"
-      }
-    }
+    "scheme": "craftshare"
   }
 }
