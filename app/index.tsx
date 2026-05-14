@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,10 @@ import {
   StyleSheet,
   Dimensions,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { checkConnection, type ConnectionStatus } from '../src/lib/supabase';
 
 const { width } = Dimensions.get('window');
 const isWeb = width > 600;
@@ -239,6 +241,40 @@ function Footer() {
   );
 }
 
+// ── Connection status banner ─────────────────────────────────
+
+function ConnectionBanner() {
+  const [status, setStatus]   = useState<ConnectionStatus>('checking');
+  const [message, setMessage] = useState('Supabase 接続確認中...');
+
+  useEffect(() => {
+    checkConnection().then(({ ok, message: msg }) => {
+      setStatus(ok ? 'ok' : 'error');
+      setMessage(msg);
+    });
+  }, []);
+
+  const bg    = status === 'ok' ? '#14532D' : status === 'error' ? '#7F1D1D' : '#1C1917';
+  const color = status === 'ok' ? '#86EFAC' : status === 'error' ? '#FCA5A5' : '#D6D3D1';
+  const icon  = status === 'ok' ? '✔' : status === 'error' ? '✖' : null;
+
+  return (
+    <View style={[sb.bar, { backgroundColor: bg }]}>
+      {status === 'checking' && (
+        <ActivityIndicator size="small" color="#D6D3D1" style={{ marginRight: 8 }} />
+      )}
+      {icon && <Text style={[sb.icon, { color }]}>{icon}</Text>}
+      <Text style={[sb.text, { color }]}>{message}</Text>
+    </View>
+  );
+}
+
+const sb = StyleSheet.create({
+  bar:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10 },
+  icon: { fontSize: 13, fontWeight: '700', marginRight: 7 },
+  text: { fontSize: 13 },
+});
+
 // ── Screen ───────────────────────────────────────────────────
 
 export default function HomeScreen() {
@@ -246,6 +282,7 @@ export default function HomeScreen() {
     <View style={s.root}>
       <StatusBar style="light" />
       <Header onLogin={() => {}} />
+      <ConnectionBanner />
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
         <HeroSection onOrder={() => {}} />
         <FeatureStrip />

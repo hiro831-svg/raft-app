@@ -1,37 +1,53 @@
-import 'react-native-url-polyfill/auto';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
-import type {
-  Profile,
-  Idea,
-  Order,
-  Favorite,
-  Review,
-  IdeaPurchase,
-} from './types';
+import { Platform } from 'react-native';
+import type { Profile, Idea, Order, Favorite, Review } from './types';
 
 const supabaseUrl  = process.env.EXPO_PUBLIC_SUPABASE_URL  ?? '';
 const supabaseAnon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
+// Use AsyncStorage on native; Supabase defaults to localStorage on web.
+function buildAuthStorage() {
+  if (Platform.OS === 'web') return undefined;
+  // Lazy require to avoid importing the native module on web.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  return AsyncStorage;
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnon, {
   auth: {
-    storage: AsyncStorage,
+    storage:          buildAuthStorage(),
     autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
+    persistSession:   true,
+    detectSessionInUrl: Platform.OS === 'web',
   },
 });
+
+// ── Connection health-check ──────────────────────────────────
+
+export type ConnectionStatus = 'checking' | 'ok' | 'error';
+
+/** Lightweight ping: calls getSession() — no DB table required. */
+export async function checkConnection(): Promise<{ ok: boolean; message: string }> {
+  try {
+    if (!supabaseUrl || !supabaseAnon) {
+      return { ok: false, message: '環境変数が設定されていません' };
+    }
+    const { error } = await supabase.auth.getSession();
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Supabase に正常に接続できました' };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : '不明なエラー';
+    return { ok: false, message: msg };
+  }
+}
 
 // ── Database helpers ─────────────────────────────────────────
 
 export const db = {
-  // Profiles
   async getProfile(userId: string): Promise<Profile | null> {
     const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+      .from('profiles').select('*').eq('id', userId).single();
     return data;
   },
 
@@ -39,45 +55,28 @@ export const db = {
     return supabase.from('profiles').upsert(profile);
   },
 
-  // Ideas
   async listIdeas(opts: { material?: string; limit?: number; offset?: number } = {}) {
-    let query = supabase
+    let q = supabase
       .from('ideas')
       .select('*, seller:profiles(*)')
       .eq('status', 'active')
       .order('created_at', { ascending: false });
-
-    if (opts.material) query = query.eq('material', opts.material);
-    if (opts.limit)    query = query.limit(opts.limit);
-    if (opts.offset)   query = query.range(opts.offset, (opts.offset ?? 0) + (opts.limit ?? 20) - 1);
-
-    const { data, error } = await query;
+    if (opts.material) q = q.eq('material', opts.material);
+    if (opts.limit)    q = q.limit(opts.limit);
+    if (opts.offset)   q = q.range(opts.offset, (opts.offset ?? 0) + (opts.limit ?? 20) - 1);
+    const { data, error } = await q;
     if (error) throw error;
     return data as Idea[];
   },
 
-  async getIdea(id: string) {
-    const { data, error } = await supabase
-      .from('ideas')
-      .select('*, seller:profiles(*)')
-      .eq('id', id)
-      .single();
-    if (error) throw error;
-    return data as Idea;
-  },
-
-  async createIdea(payload: Omit<Idea, 'id' | 'seller_id' | 'view_count' | 'created_at' | 'updated_at'>) {
+  async createOrder(payload: Omit<Order, 'id' | 'buyer_id' | 'status' | 'payment_status' | 'stripe_payment_intent_id' | 'tracking_number' | 'created_at' | 'updated_at'>) {
     const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase
-      .from('ideas')
-      .insert({ ...payload, seller_id: user!.id })
-      .select()
-      .single();
+      .from('orders').insert({ ...payload, buyer_id: user!.id }).select().single();
     if (error) throw error;
-    return data as Idea;
+    return data as Order;
   },
 
-  // Orders
   async listOrders(userId: string) {
     const { data, error } = await supabase
       .from('orders')
@@ -88,35 +87,10 @@ export const db = {
     return data as Order[];
   },
 
-  async createOrder(payload: Omit<Order, 'id' | 'buyer_id' | 'status' | 'payment_status' | 'stripe_payment_intent_id' | 'tracking_number' | 'created_at' | 'updated_at'>) {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data, error } = await supabase
-      .from('orders')
-      .insert({ ...payload, buyer_id: user!.id })
-      .select()
-      .single();
-    if (error) throw error;
-    return data as Order;
-  },
-
-  async updateOrderStatus(id: string, status: Order['status']) {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', id);
-    if (error) throw error;
-  },
-
-  // Favorites
   async toggleFavorite(ideaId: string): Promise<boolean> {
     const { data: { user } } = await supabase.auth.getUser();
     const { data: existing } = await supabase
-      .from('favorites')
-      .select('id')
-      .eq('user_id', user!.id)
-      .eq('idea_id', ideaId)
-      .single();
-
+      .from('favorites').select('id').eq('user_id', user!.id).eq('idea_id', ideaId).single();
     if (existing) {
       await supabase.from('favorites').delete().eq('id', existing.id);
       return false;
@@ -127,32 +101,20 @@ export const db = {
 
   async listFavorites(userId: string) {
     const { data, error } = await supabase
-      .from('favorites')
-      .select('*, idea:ideas(*)')
-      .eq('user_id', userId);
+      .from('favorites').select('*, idea:ideas(*)').eq('user_id', userId);
     if (error) throw error;
     return data as Favorite[];
   },
 
-  // Reviews
-  async createReview(payload: Pick<Review, 'order_id' | 'rating' | 'comment'>) {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data, error } = await supabase
-      .from('reviews')
-      .insert({ ...payload, reviewer_id: user!.id })
-      .select()
-      .single();
-    if (error) throw error;
-    return data as Review;
-  },
-
-  // Storage
-  async uploadImage(bucket: 'order-images' | 'idea-images' | 'avatars', uri: string, fileName: string): Promise<string> {
+  async uploadImage(
+    bucket: 'order-images' | 'idea-images' | 'avatars',
+    uri: string,
+    fileName: string,
+  ): Promise<string> {
     const response = await fetch(uri);
-    const blob     = await response.blob();
+    const blob = await response.blob();
     const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, blob, { upsert: true });
+      .from(bucket).upload(fileName, blob, { upsert: true });
     if (error) throw error;
     const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
     return urlData.publicUrl;
