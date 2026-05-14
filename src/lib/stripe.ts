@@ -3,8 +3,11 @@
  * In production, the PaymentIntent is created on a secure backend
  * (Supabase Edge Function / Stripe API). This file wires up the
  * client-side presentPaymentSheet flow and provides a mock for local dev.
+ *
+ * @stripe/stripe-react-native has no web support, so all hooks are
+ * no-ops on web to allow `expo start --web` without crashing.
  */
-import { useStripe } from '@stripe/stripe-react-native';
+import { Platform } from 'react-native';
 
 export const STRIPE_PUBLISHABLE_KEY =
   process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
@@ -25,14 +28,11 @@ export interface PaymentResult {
 }
 
 // ── Mock backend call ────────────────────────────────────────
-// Replace with a real Supabase Edge Function / server call.
 async function fetchPaymentSheetParams(params: PaymentSheetParams): Promise<{
   paymentIntent: string;
   ephemeralKey: string;
   customer: string;
 }> {
-  // --- MOCK ---
-  // In production: POST to /functions/v1/create-payment-intent
   await new Promise((r) => setTimeout(r, 500));
   return {
     paymentIntent:  `pi_mock_${Date.now()}`,
@@ -44,6 +44,19 @@ async function fetchPaymentSheetParams(params: PaymentSheetParams): Promise<{
 // ── Hook ─────────────────────────────────────────────────────
 
 export function useStripePayment() {
+  // Web: return a stub so screens can import this hook without crashing.
+  if (Platform.OS === 'web') {
+    return {
+      startPayment: async (_params: PaymentSheetParams): Promise<PaymentResult> => ({
+        success: false,
+        error: 'Stripe payment is not supported on web in this build.',
+      }),
+    };
+  }
+
+  // Native only – require at call-time to avoid web bundling errors.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { useStripe } = require('@stripe/stripe-react-native');
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   async function startPayment(params: PaymentSheetParams): Promise<PaymentResult> {
