@@ -10,7 +10,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { checkConnection, type ConnectionStatus } from '../src/lib/supabase';
+import { useRouter } from 'expo-router';
+import type { Session } from '@supabase/supabase-js';
+import { supabase, checkConnection, type ConnectionStatus } from '../src/lib/supabase';
 
 const { width } = Dimensions.get('window');
 const isWeb = width > 600;
@@ -80,16 +82,34 @@ const MATERIAL_COLOR: Record<string, string> = {
 
 // ── Sub-components ───────────────────────────────────────────
 
-function Header({ onLogin }: { onLogin: () => void }) {
+function Header({ session }: { session: Session | null }) {
+  const router = useRouter();
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.replace('/auth');
+  }
+
   return (
     <View style={s.header}>
       <View style={s.logoRow}>
         <View style={s.logoMark} />
         <Text style={s.logoText}>CraftShare</Text>
       </View>
-      <TouchableOpacity style={s.loginBtn} onPress={onLogin} activeOpacity={0.8}>
-        <Text style={s.loginBtnText}>ログイン</Text>
-      </TouchableOpacity>
+      {session ? (
+        <View style={s.headerRight}>
+          <Text style={s.userEmail} numberOfLines={1}>
+            {session.user.email?.split('@')[0]}
+          </Text>
+          <TouchableOpacity style={s.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
+            <Text style={s.logoutBtnText}>ログアウト</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity style={s.loginBtn} onPress={() => router.replace('/auth')} activeOpacity={0.8}>
+          <Text style={s.loginBtnText}>ログイン</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -278,10 +298,18 @@ const sb = StyleSheet.create({
 // ── Screen ───────────────────────────────────────────────────
 
 export default function HomeScreen() {
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => setSession(s));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <View style={s.root}>
       <StatusBar style="light" />
-      <Header onLogin={() => {}} />
+      <Header session={session} />
       <ConnectionBanner />
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
         <HeroSection onOrder={() => {}} />
@@ -324,8 +352,12 @@ const s = StyleSheet.create({
   logoRow:   { flexDirection: 'row', alignItems: 'center' },
   logoMark:  { width: 8, height: 24, backgroundColor: GOLD, borderRadius: 2, marginRight: 10 },
   logoText:  { color: GOLD_L, fontSize: 22, fontWeight: '700', letterSpacing: 2 },
-  loginBtn:  { borderWidth: 1, borderColor: GOLD, paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20 },
-  loginBtnText: { color: GOLD, fontSize: 13, fontWeight: '600' },
+  headerRight:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  userEmail:      { color: GOLD_L, fontSize: 12, maxWidth: 100 },
+  loginBtn:       { borderWidth: 1, borderColor: GOLD, paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20 },
+  loginBtnText:   { color: GOLD, fontSize: 13, fontWeight: '600' },
+  logoutBtn:      { backgroundColor: 'rgba(212,160,23,0.15)', borderWidth: 1, borderColor: GOLD, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },
+  logoutBtnText:  { color: GOLD, fontSize: 12, fontWeight: '600' },
 
   // Hero
   hero:        { backgroundColor: BROWN, paddingBottom: 48 },
