@@ -11,8 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
-import type { Session } from '@supabase/supabase-js';
+import { useRouter } from 'expo-router';import type { Session } from '@supabase/supabase-js';
 import {
   Search, Lightbulb, Hammer, ShoppingBag,
   Star, Pencil,
@@ -194,6 +193,18 @@ function SearchBtn() {
   );
 }
 
+// ── CTA row with navigation ──────────────────────────────────
+
+function CtaRowWithNav() {
+  const router = useRouter();
+  return (
+    <View style={s.ctaRow}>
+      <CtaButton label="商品を作る"  Icon={Pencil}      onPress={() => router.push('/create')} />
+      <CtaButton label="商品を探す"  Icon={ShoppingBag} />
+    </View>
+  );
+}
+
 // ── Hero ─────────────────────────────────────────────────────
 
 function HeroSection() {
@@ -233,10 +244,7 @@ function HeroSection() {
       </View>
 
       {/* CTA buttons */}
-      <View style={s.ctaRow}>
-        <CtaButton label="商品を作る"  Icon={Pencil}      />
-        <CtaButton label="商品を探す"  Icon={ShoppingBag} />
-      </View>
+      <CtaRowWithNav />
     </View>
   );
 }
