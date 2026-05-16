@@ -376,7 +376,7 @@ function CategoryCard({
 }
 
 function CategorySection() {
-  const [active, setActive] = useState('all');
+  const [active, setActive] = useState<string | null>(null);
   return (
     <View style={s.catSection}>
       <View style={s.sectionHeader}>
@@ -391,7 +391,7 @@ function CategorySection() {
             key={cat.id}
             cat={cat}
             isActive={active === cat.id}
-            onPress={() => setActive(cat.id)}
+            onPress={() => setActive(active === cat.id ? null : cat.id)}
           />
         ))}
       </View>
