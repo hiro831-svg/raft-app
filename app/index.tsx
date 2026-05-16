@@ -38,8 +38,8 @@ const GOLD_L   = '#D4A017';
 const SUCCESS  = '#166534';   // green-800
 
 // Diagram square sizes (web only; mobile = auto height)
-const SQ_LARGE = 290;
-const SQ_SMALL = 210;
+const SQ_LARGE = 340;
+const SQ_SMALL = 250;
 
 // ── Connection banner ────────────────────────────────────────
 
@@ -179,7 +179,7 @@ function HowItWorksSection() {
     <View style={s.howSection}>
       <View style={s.howHeader}>
         <View style={s.sectionAccentLine} />
-        <Text style={s.howTitle}>Arteの仕組み</Text>
+        <Text style={s.howTitle}>Arteとは</Text>
       </View>
 
       {/* Diagram row/column */}
@@ -194,7 +194,7 @@ function HowItWorksSection() {
           <Text style={[s.diagRoleJp, { color: '#B45309' }]}>クリエイター</Text>
           <View style={[s.diagDivider, { borderColor: '#FDE68A' }]} />
           <Text style={[s.diagMainLine, { color: '#78350F' }]}>
-            あなただけのデザインを実現して商品に。
+            世界にまだないデザインを実現してあなたの商品に。
           </Text>
           <Text style={s.diagBullet}>・デザインをアップロード。</Text>
           <Text style={s.diagBullet}>・販売価格を設定。</Text>
@@ -431,10 +431,12 @@ const s = StyleSheet.create({
   },
   heroSub: {
     color: TEXT_2,
-    fontSize: isWeb ? 18 : 15,
+    fontSize: isWeb ? 18 : 14,
     lineHeight: 28,
     marginBottom: 36,
-    maxWidth: 500,
+    maxWidth: 700,
+    // prevent line-break on web
+    ...(Platform.OS === 'web' ? { whiteSpace: 'nowrap' } as any : {}),
   },
 
   // Search
@@ -564,14 +566,14 @@ const s = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // Connector lines
+  // Connector lines (gap between boxes)
   connectorH: {
-    width: 28, height: 2,
+    width: 56, height: 2,
     backgroundColor: BORDER,
     flexShrink: 0,
   },
   connectorV: {
-    width: 2, height: 20,
+    width: 2, height: 32,
     backgroundColor: BORDER,
     alignSelf: 'center',
   },
@@ -579,7 +581,7 @@ const s = StyleSheet.create({
   // Diagram boxes — squares on web, auto-height on mobile
   diagBox: {
     borderRadius: 20,
-    padding: 18,
+    padding: 24,
     borderWidth: 1.5,
     overflow: 'hidden',
   },
@@ -601,15 +603,15 @@ const s = StyleSheet.create({
   },
 
   diagIconWrap: {
-    width: 42, height: 42, borderRadius: 12,
+    width: 48, height: 48, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: 8, borderWidth: 1,
+    marginBottom: 10, borderWidth: 1,
   },
-  diagRole:    { fontSize: 16, fontWeight: '900', marginBottom: 1 },
-  diagRoleJp:  { fontSize: 10, marginBottom: 8 },
-  diagDivider: { borderTopWidth: 1, marginBottom: 10 },
-  diagMainLine:{ fontSize: 11, lineHeight: 16, marginBottom: 6, fontWeight: '600' },
-  diagBullet:  { color: TEXT_2, fontSize: 11, lineHeight: 17 },
+  diagRole:    { fontSize: 18, fontWeight: '900', marginBottom: 2 },
+  diagRoleJp:  { fontSize: 11, marginBottom: 10 },
+  diagDivider: { borderTopWidth: 1, marginBottom: 12 },
+  diagMainLine:{ fontSize: 12, lineHeight: 18, marginBottom: 8, fontWeight: '600' },
+  diagBullet:  { color: TEXT_2, fontSize: 12, lineHeight: 19 },
   diagCta: {
     marginTop: 10,
     borderWidth: 1, borderColor: GOLD_L + '60',
