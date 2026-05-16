@@ -38,8 +38,8 @@ const GOLD_L   = '#D4A017';
 const SUCCESS  = '#166534';   // green-800
 
 // Diagram square sizes (web only; mobile = auto height)
-const SQ_LARGE = 230;
-const SQ_SMALL = 170;
+const SQ_LARGE = 290;
+const SQ_SMALL = 210;
 
 // ── Connection banner ────────────────────────────────────────
 
@@ -129,7 +129,7 @@ function HeroSection() {
 
       {/* Sub copy */}
       <Text style={s.heroSub}>
-        クリエイターとカスタマーを作品がつなぐプラットフォーム
+        クリエイターとカスタマーをデザインがつなぐプラットフォーム
       </Text>
 
       {/* Search bar */}
@@ -180,7 +180,6 @@ function HowItWorksSection() {
       <View style={s.howHeader}>
         <View style={s.sectionAccentLine} />
         <Text style={s.howTitle}>Arteの仕組み</Text>
-        <Text style={s.howSubtitle}>クリエイターとカスタマーを、職人の技がつなぐ</Text>
       </View>
 
       {/* Diagram row/column */}
@@ -340,7 +339,7 @@ function Footer() {
         <View style={[s.logoDot, { backgroundColor: GOLD_L }]} />
       </View>
       <Text style={s.footerSub}>
-        クリエイターとカスタマーを作品がつなぐプラットフォーム
+        クリエイターとカスタマーをデザインがつなぐプラットフォーム
       </Text>
       <View style={s.footerLinks}>
         {['利用規約', 'プライバシーポリシー', 'お問い合わせ', 'クリエイターガイド'].map((link) => (
@@ -409,7 +408,7 @@ const s = StyleSheet.create({
 
   // Hero
   hero: {
-    backgroundColor: BG,
+    backgroundColor: BG,   // explicitly beige — matches root bg
     paddingHorizontal: isWeb ? 72 : 24,
     paddingTop: isWeb ? 80 : 52,
     paddingBottom: 60,
@@ -552,7 +551,7 @@ const s = StyleSheet.create({
 
   // Diagram layout
   diagram: {
-    paddingHorizontal: isWeb ? 64 : 20,
+    paddingHorizontal: isWeb ? 24 : 16,
   },
   diagramWeb: {
     flexDirection: 'row',
