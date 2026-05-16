@@ -24,22 +24,38 @@ import { supabase, checkConnection, type ConnectionStatus } from '../src/lib/sup
 const { width } = Dimensions.get('window');
 const isWeb = width > 700;
 
-// Light beige theme
-const BG       = '#F5F0E8';   // warm beige — unified background
-const BG_ALT   = '#EDE8DF';   // slightly darker beige for alternate sections
+const BG       = '#F5F0E8';
+const BG_ALT   = '#EDE8DF';
 const CARD     = '#FFFFFF';
 const BORDER   = '#DDD5C8';
-const TEXT     = '#1C1917';   // stone-900
-const TEXT_2   = '#57534E';   // stone-600
-const TEXT_3   = '#A8A29E';   // stone-400
-const ACCENT   = '#C05A00';   // orange
-const GOLD     = '#B8860B';   // dark gold (readable on light bg)
+const TEXT     = '#1C1917';
+const TEXT_2   = '#57534E';
+const TEXT_3   = '#A8A29E';
+const ACCENT   = '#C05A00';
+const ACCENT_D = '#A34E00';   // darker accent for hover fill
+const GOLD     = '#B8860B';
 const GOLD_L   = '#D4A017';
-const SUCCESS  = '#166534';   // green-800
+const SUCCESS  = '#166534';
+const SUCCESS_D = '#0D4A25';  // darker green for hover fill
 
-// Diagram square sizes (web only; mobile = auto height)
 const SQ_LARGE = 340;
 const SQ_SMALL = 250;
+
+// ── Shared hover hook ────────────────────────────────────────
+
+function useHover() {
+  const [hovered, setHovered] = useState(false);
+  const webHandlers: any = Platform.OS === 'web' ? {
+    onMouseEnter: () => setHovered(true),
+    onMouseLeave: () => setHovered(false),
+  } : {};
+  const webT: any = Platform.OS === 'web' ? {
+    transitionProperty: 'background-color, color, border-color',
+    transitionDuration: '250ms',
+    transitionTimingFunction: 'ease',
+  } : {};
+  return { hovered, webHandlers, webT };
+}
 
 // ── Connection banner ────────────────────────────────────────
 
@@ -72,7 +88,42 @@ const cb = StyleSheet.create({
   text: { fontSize: 12 },
 });
 
-// ── Header ───────────────────────────────────────────────────
+// ── Header buttons ───────────────────────────────────────────
+
+function HeaderLoginBtn({ onPress }: { onPress: () => void }) {
+  const { hovered, webHandlers, webT } = useHover();
+  return (
+    <TouchableOpacity onPress={onPress} {...webHandlers}>
+      <Text style={[s.headerLink, hovered && { color: ACCENT }, webT as any]}>ログイン</Text>
+    </TouchableOpacity>
+  );
+}
+
+function HeaderSignupBtn({ onPress }: { onPress: () => void }) {
+  const { hovered, webHandlers, webT } = useHover();
+  return (
+    <TouchableOpacity
+      style={[s.headerSignup, hovered && { backgroundColor: ACCENT_D }, webT]}
+      onPress={onPress}
+      {...webHandlers}
+    >
+      <Text style={s.headerSignupText}>無料で始める</Text>
+    </TouchableOpacity>
+  );
+}
+
+function HeaderLogoutBtn({ onPress }: { onPress: () => void }) {
+  const { hovered, webHandlers, webT } = useHover();
+  return (
+    <TouchableOpacity
+      style={[s.logoutBtn, hovered && { borderColor: ACCENT, backgroundColor: '#FFF7ED' }, webT]}
+      onPress={onPress}
+      {...webHandlers}
+    >
+      <Text style={[s.logoutBtnText, hovered && { color: ACCENT }]}>ログアウト</Text>
+    </TouchableOpacity>
+  );
+}
 
 function Header({ session }: { session: Session | null }) {
   const router = useRouter();
@@ -91,25 +142,19 @@ function Header({ session }: { session: Session | null }) {
       {session ? (
         <View style={s.headerRight}>
           <Text style={s.userLabel}>{session.user.email?.split('@')[0]}</Text>
-          <TouchableOpacity style={s.logoutBtn} onPress={handleLogout}>
-            <Text style={s.logoutBtnText}>ログアウト</Text>
-          </TouchableOpacity>
+          <HeaderLogoutBtn onPress={handleLogout} />
         </View>
       ) : (
         <View style={s.headerRight}>
-          <TouchableOpacity onPress={() => router.replace('/auth')}>
-            <Text style={s.headerLink}>ログイン</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={s.headerSignup} onPress={() => router.replace('/auth')}>
-            <Text style={s.headerSignupText}>無料で始める</Text>
-          </TouchableOpacity>
+          <HeaderLoginBtn onPress={() => router.replace('/auth')} />
+          <HeaderSignupBtn onPress={() => router.replace('/auth')} />
         </View>
       )}
     </View>
   );
 }
 
-// ── CTA button with hover animation ─────────────────────────
+// ── CTA button (outline → fill on hover) ────────────────────
 
 function CtaButton({
   label,
@@ -120,28 +165,31 @@ function CtaButton({
   Icon: React.ComponentType<{ size: number; color: string; style?: any }>;
   onPress?: () => void;
 }) {
-  const [hovered, setHovered] = useState(false);
-
-  const webHandlers: any = Platform.OS === 'web' ? {
-    onMouseEnter: () => setHovered(true),
-    onMouseLeave: () => setHovered(false),
-  } : {};
-
-  const webTransition: any = Platform.OS === 'web' ? {
-    transitionProperty: 'background-color',
-    transitionDuration: '280ms',
-    transitionTimingFunction: 'ease',
-  } : {};
-
+  const { hovered, webHandlers, webT } = useHover();
   return (
     <TouchableOpacity
-      style={[s.ctaBtn, hovered && s.ctaBtnHovered, webTransition]}
+      style={[s.ctaBtn, hovered && s.ctaBtnHovered, webT]}
       activeOpacity={0.8}
       onPress={onPress}
       {...webHandlers}
     >
-      <Icon size={17} color={hovered ? '#FFFFFF' : ACCENT} style={{ marginRight: 8 }} />
-      <Text style={[s.ctaBtnText, hovered && { color: '#FFFFFF' }]}>{label}</Text>
+      <Icon size={17} color={hovered ? CARD : ACCENT} style={{ marginRight: 8 }} />
+      <Text style={[s.ctaBtnText, hovered && { color: CARD }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+// ── Search button (fill, darken on hover) ───────────────────
+
+function SearchBtn() {
+  const { hovered, webHandlers, webT } = useHover();
+  return (
+    <TouchableOpacity
+      style={[s.searchBtn, hovered && { backgroundColor: ACCENT_D }, webT]}
+      activeOpacity={0.85}
+      {...webHandlers}
+    >
+      <Text style={s.searchBtnText}>検索</Text>
     </TouchableOpacity>
   );
 }
@@ -153,12 +201,10 @@ function HeroSection() {
 
   return (
     <View style={s.hero}>
-      {/* Main headline */}
       <Text style={s.heroTitle}>
         {'世界にまだないデザインを作る\n他のどこにもないデザインを見つける'}
       </Text>
 
-      {/* Sub copy */}
       <Text style={s.heroSub}>
         クリエイターとカスタマーをデザインがつなぐプラットフォーム
       </Text>
@@ -174,9 +220,7 @@ function HeroSection() {
           style={s.searchInput}
           returnKeyType="search"
         />
-        <TouchableOpacity style={s.searchBtn} activeOpacity={0.88}>
-          <Text style={s.searchBtnText}>検索</Text>
-        </TouchableOpacity>
+        <SearchBtn />
       </View>
 
       {/* Search hints */}
@@ -197,6 +241,34 @@ function HeroSection() {
   );
 }
 
+// ── Diagram CTA buttons ──────────────────────────────────────
+
+function DiagCtaCreator() {
+  const { hovered, webHandlers, webT } = useHover();
+  return (
+    <TouchableOpacity
+      style={[s.diagCtaCreator, hovered && { backgroundColor: ACCENT, borderColor: ACCENT }, webT]}
+      activeOpacity={0.85}
+      {...webHandlers}
+    >
+      <Text style={[s.diagCtaText, { color: hovered ? CARD : GOLD }]}>出品を始める →</Text>
+    </TouchableOpacity>
+  );
+}
+
+function DiagCtaCustomer() {
+  const { hovered, webHandlers, webT } = useHover();
+  return (
+    <TouchableOpacity
+      style={[s.diagCtaCustomer, hovered && { backgroundColor: SUCCESS_D, borderColor: SUCCESS_D }, webT]}
+      activeOpacity={0.85}
+      {...webHandlers}
+    >
+      <Text style={[s.diagCtaText, { color: hovered ? CARD : SUCCESS }]}>商品を探す →</Text>
+    </TouchableOpacity>
+  );
+}
+
 // ── How it works ─────────────────────────────────────────────
 
 function HowItWorksSection() {
@@ -207,7 +279,6 @@ function HowItWorksSection() {
         <Text style={s.howTitle}>Arteとは</Text>
       </View>
 
-      {/* Diagram row/column */}
       <View style={[s.diagram, isWeb && s.diagramWeb]}>
 
         {/* ── Creator ── */}
@@ -223,15 +294,12 @@ function HowItWorksSection() {
           </Text>
           <Text style={s.diagBullet}>・デザインをアップロード。</Text>
           <Text style={s.diagBullet}>・販売価格を設定。</Text>
-          <TouchableOpacity style={s.diagCta} activeOpacity={0.85}>
-            <Text style={s.diagCtaText}>出品を始める →</Text>
-          </TouchableOpacity>
+          <DiagCtaCreator />
         </View>
 
-        {/* ── Connector ── */}
         <View style={isWeb ? s.connectorH : s.connectorV} />
 
-        {/* ── Arte (center, smaller) ── */}
+        {/* ── Arte (center) ── */}
         <View style={[s.diagBox, s.diagCraft]}>
           <View style={[s.diagIconWrap, { backgroundColor: '#FFF7ED', borderColor: '#FED7AA' }]}>
             <Hammer size={20} color={ACCENT} />
@@ -243,7 +311,6 @@ function HowItWorksSection() {
           </Text>
         </View>
 
-        {/* ── Connector ── */}
         <View style={isWeb ? s.connectorH : s.connectorV} />
 
         {/* ── Customer ── */}
@@ -259,12 +326,7 @@ function HowItWorksSection() {
           </Text>
           <Text style={s.diagBullet}>・最高のオリジナル商品を探し、購入。</Text>
           <Text style={s.diagBullet}>・レビューをクリエイターに届ける</Text>
-          <TouchableOpacity
-            style={[s.diagCta, { borderColor: SUCCESS + '40', backgroundColor: SUCCESS + '12' }]}
-            activeOpacity={0.85}
-          >
-            <Text style={[s.diagCtaText, { color: SUCCESS }]}>商品を探す →</Text>
-          </TouchableOpacity>
+          <DiagCtaCustomer />
         </View>
 
       </View>
@@ -276,7 +338,7 @@ function HowItWorksSection() {
   );
 }
 
-// ── Category nav ─────────────────────────────────────────────
+// ── Category card with hover ─────────────────────────────────
 
 const CATEGORIES = [
   { id: 'all',     label: 'すべて',  emoji: '✦',  color: GOLD,      bg: '#FDF8EC' },
@@ -284,6 +346,34 @@ const CATEGORIES = [
   { id: 'leather', label: '革',      emoji: '🪵',  color: ACCENT,    bg: '#FFF7ED' },
   { id: 'glass',   label: 'ガラス',  emoji: '💎',  color: '#0369A1', bg: '#F0F9FF' },
 ];
+
+function CategoryCard({
+  cat, isActive, onPress,
+}: {
+  cat: typeof CATEGORIES[0];
+  isActive: boolean;
+  onPress: () => void;
+}) {
+  const { hovered, webHandlers, webT } = useHover();
+  const highlighted = isActive || hovered;
+  return (
+    <TouchableOpacity
+      style={[
+        s.catCard,
+        highlighted && { borderColor: cat.color, borderWidth: 2, backgroundColor: cat.bg },
+        webT,
+      ]}
+      onPress={onPress}
+      activeOpacity={0.85}
+      {...webHandlers}
+    >
+      <View style={[s.catIconWrap, { backgroundColor: cat.bg }]}>
+        <Text style={s.catEmoji}>{cat.emoji}</Text>
+      </View>
+      <Text style={[s.catLabel, highlighted && { color: cat.color }]}>{cat.label}</Text>
+    </TouchableOpacity>
+  );
+}
 
 function CategorySection() {
   const [active, setActive] = useState('all');
@@ -296,28 +386,34 @@ function CategorySection() {
         </View>
       </View>
       <View style={s.catGrid}>
-        {CATEGORIES.map((cat) => {
-          const isActive = active === cat.id;
-          return (
-            <TouchableOpacity
-              key={cat.id}
-              style={[s.catCard, isActive && { borderColor: cat.color, borderWidth: 2 }]}
-              onPress={() => setActive(cat.id)}
-              activeOpacity={0.85}
-            >
-              <View style={[s.catIconWrap, { backgroundColor: cat.bg }]}>
-                <Text style={s.catEmoji}>{cat.emoji}</Text>
-              </View>
-              <Text style={[s.catLabel, isActive && { color: cat.color }]}>{cat.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
+        {CATEGORIES.map((cat) => (
+          <CategoryCard
+            key={cat.id}
+            cat={cat}
+            isActive={active === cat.id}
+            onPress={() => setActive(cat.id)}
+          />
+        ))}
       </View>
     </View>
   );
 }
 
 // ── Pickup placeholder ───────────────────────────────────────
+
+function PlaceholderShopBtn() {
+  const { hovered, webHandlers, webT } = useHover();
+  return (
+    <TouchableOpacity
+      style={[s.placeholderBtn, hovered && { backgroundColor: ACCENT_D }, webT]}
+      activeOpacity={0.85}
+      {...webHandlers}
+    >
+      <Search size={15} color={CARD} style={{ marginRight: 6 }} />
+      <Text style={s.placeholderBtnText}>商品を探す</Text>
+    </TouchableOpacity>
+  );
+}
 
 function PickupSection() {
   return (
@@ -337,10 +433,7 @@ function PickupSection() {
         <Text style={s.placeholderSub}>
           クリエイターたちのユニークなデザインが{'\n'}近日公開予定です。
         </Text>
-        <TouchableOpacity style={s.placeholderBtn} activeOpacity={0.85}>
-          <Search size={15} color={CARD} style={{ marginRight: 6 }} />
-          <Text style={s.placeholderBtnText}>商品を探す</Text>
-        </TouchableOpacity>
+        <PlaceholderShopBtn />
         <View style={s.placeholderTags}>
           {['#刻印', '#名入れ', '#革財布', '#表札', '#ガラス彫刻'].map((tag) => (
             <View key={tag} style={s.placeholderTag}>
@@ -353,7 +446,19 @@ function PickupSection() {
   );
 }
 
-// ── Footer ───────────────────────────────────────────────────
+// ── Footer link with hover ────────────────────────────────────
+
+function FooterLink({ label }: { label: string }) {
+  const { hovered, webHandlers, webT } = useHover();
+  return (
+    <TouchableOpacity
+      style={[{ marginHorizontal: 8, marginVertical: 4 }, webT]}
+      {...webHandlers}
+    >
+      <Text style={[s.footerLink, hovered && { color: GOLD_L }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
 
 function Footer() {
   return (
@@ -368,9 +473,7 @@ function Footer() {
       </Text>
       <View style={s.footerLinks}>
         {['利用規約', 'プライバシーポリシー', 'お問い合わせ', 'クリエイターガイド'].map((link) => (
-          <TouchableOpacity key={link} style={{ marginHorizontal: 8, marginVertical: 4 }}>
-            <Text style={s.footerLink}>{link}</Text>
-          </TouchableOpacity>
+          <FooterLink key={link} label={link} />
         ))}
       </View>
       <Text style={s.footerCopy}>© 2025 Arte Inc. All rights reserved.</Text>
@@ -433,7 +536,7 @@ const s = StyleSheet.create({
 
   // Hero
   hero: {
-    backgroundColor: BG,   // explicitly beige — matches root bg
+    backgroundColor: BG,
     paddingHorizontal: isWeb ? 72 : 24,
     paddingTop: isWeb ? 80 : 52,
     paddingBottom: 60,
@@ -452,7 +555,6 @@ const s = StyleSheet.create({
     lineHeight: 28,
     marginBottom: 36,
     maxWidth: 700,
-    // prevent line-break on web
     ...(Platform.OS === 'web' ? { whiteSpace: 'nowrap' } as any : {}),
   },
 
@@ -497,7 +599,6 @@ const s = StyleSheet.create({
     gap: 14,
     alignItems: isWeb ? 'center' : 'stretch',
   },
-  // Shared button style — transparent bg / orange border; hover fills bg via ctaBtnHovered
   ctaBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderColor: ACCENT,
@@ -562,45 +663,24 @@ const s = StyleSheet.create({
   },
   howSubtitle: { color: TEXT_2, fontSize: 14 },
 
-  // Diagram layout
-  diagram: {
-    paddingHorizontal: isWeb ? 24 : 16,
-  },
-  diagramWeb: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  // Diagram
+  diagram:    { paddingHorizontal: isWeb ? 24 : 16 },
+  diagramWeb: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   diagramCaption: {
     color: TEXT_3, fontSize: 12, textAlign: 'center',
-    marginTop: 28, paddingHorizontal: isWeb ? 64 : 24,
-    lineHeight: 18,
+    marginTop: 28, paddingHorizontal: isWeb ? 64 : 24, lineHeight: 18,
   },
 
-  // Connector lines (gap between boxes)
-  connectorH: {
-    width: 56, height: 2,
-    backgroundColor: BORDER,
-    flexShrink: 0,
-  },
-  connectorV: {
-    width: 2, height: 32,
-    backgroundColor: BORDER,
-    alignSelf: 'center',
-  },
+  connectorH: { width: 56, height: 2, backgroundColor: BORDER, flexShrink: 0 },
+  connectorV: { width: 2, height: 32, backgroundColor: BORDER, alignSelf: 'center' },
 
-  // Diagram boxes — squares on web, auto-height on mobile
   diagBox: {
-    borderRadius: 20,
-    padding: 24,
-    borderWidth: 1.5,
-    overflow: 'hidden',
+    borderRadius: 20, padding: 24, borderWidth: 1.5, overflow: 'hidden',
   },
   diagCreator: {
     width: isWeb ? SQ_LARGE : undefined,
     height: isWeb ? SQ_LARGE : undefined,
     backgroundColor: '#FFFBEB', borderColor: '#FDE68A',
-    marginBottom: isWeb ? 0 : 0,
   },
   diagCraft: {
     width: isWeb ? SQ_SMALL : undefined,
@@ -623,17 +703,26 @@ const s = StyleSheet.create({
   diagDivider: { borderTopWidth: 1, marginBottom: 12 },
   diagMainLine:{ fontSize: 12, lineHeight: 18, marginBottom: 8, fontWeight: '600' },
   diagBullet:  { color: TEXT_2, fontSize: 12, lineHeight: 19 },
-  diagCta: {
+
+  // Diagram CTA buttons (separate styles for creator vs customer)
+  diagCtaCreator: {
     marginTop: 10,
     borderWidth: 1, borderColor: GOLD_L + '60',
     backgroundColor: '#FDF8EC',
     paddingVertical: 7, borderRadius: 8,
     alignItems: 'center',
   },
-  diagCtaText: { color: GOLD, fontSize: 11, fontWeight: '700' },
+  diagCtaCustomer: {
+    marginTop: 10,
+    borderWidth: 1, borderColor: SUCCESS + '40',
+    backgroundColor: SUCCESS + '12',
+    paddingVertical: 7, borderRadius: 8,
+    alignItems: 'center',
+  },
+  diagCtaText: { fontSize: 11, fontWeight: '700' },
   craftDesc:   { fontSize: 11, lineHeight: 17 },
 
-  // Pickup / placeholder
+  // Pickup
   pickupSection: { backgroundColor: BG_ALT, paddingTop: 48, paddingBottom: 64 },
   placeholder: {
     marginHorizontal: isWeb ? 64 : 20,
@@ -651,9 +740,7 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 20,
   },
-  placeholderTitle: {
-    color: TEXT, fontSize: 18, fontWeight: '800', marginBottom: 10,
-  },
+  placeholderTitle: { color: TEXT, fontSize: 18, fontWeight: '800', marginBottom: 10 },
   placeholderSub: {
     color: TEXT_2, fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 24,
   },
@@ -680,5 +767,4 @@ const s = StyleSheet.create({
   footerLinks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
   footerLink:  { color: TEXT_3, fontSize: 12 },
   footerCopy:  { color: '#44403C', fontSize: 11, marginTop: 4 },
-  // footer logo reuses header logo styles but on dark bg:
 });
