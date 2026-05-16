@@ -209,7 +209,7 @@ export default function AuthScreen() {
         <View style={s.logoArea}>
           <View style={s.logoRow}>
             <View style={s.logoMark} />
-            <Text style={s.logoText}>CraftShare</Text>
+            <Text style={s.logoText}>Arte</Text>
           </View>
           <Text style={s.logoSub}>職人の手仕事とあなたのアイデアをつなぐ</Text>
         </View>

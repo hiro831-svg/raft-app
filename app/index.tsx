@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,16 @@ import {
   TextInput,
   StyleSheet,
   Dimensions,
-  Image,
-  ActivityIndicator,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import type { Session } from '@supabase/supabase-js';
 import {
-  Search, ChevronRight, Lightbulb, Hammer, Truck,
-  Star, Heart, Package,
+  Search, ChevronRight, Lightbulb, Hammer, ShoppingBag,
+  Sparkles, Package, Heart, Star, Truck, ArrowRight,
+  Pencil, DollarSign, Image as ImageIcon,
 } from 'lucide-react-native';
 import { supabase, checkConnection, type ConnectionStatus } from '../src/lib/supabase';
 
@@ -25,108 +25,24 @@ import { supabase, checkConnection, type ConnectionStatus } from '../src/lib/sup
 const { width } = Dimensions.get('window');
 const isWeb     = width > 700;
 
-const BROWN  = '#1a0f0a';
-const BROWN2 = '#2A1508';
-const BROWN3 = '#3D2010';
-const ACCENT = '#C05A00';
-const GOLD   = '#D4A017';
-const GOLD_L = '#FFD966';
-const CREAM  = '#FFF8F0';
-const CREAM2 = '#F5ECD7';
-const GRAY   = '#78716C';
-const GRAY_L = '#E7E5E4';
-const WHITE  = '#FFFFFF';
+const BROWN   = '#1a0f0a';
+const BROWN2  = '#231309';
+const BROWN3  = '#3D2010';
+const ACCENT  = '#C05A00';
+const GOLD    = '#D4A017';
+const GOLD_L  = '#FFD966';
+const CREAM   = '#FFF8F0';
+const CREAM2  = '#F5ECD7';
+const GRAY    = '#78716C';
+const GRAY_L  = '#E7E5E4';
+const WHITE   = '#FFFFFF';
+const SUCCESS = '#16A34A';
 
-// ── Mock product data ────────────────────────────────────────
+// ── Connection banner ────────────────────────────────────────
 
-const PRODUCTS = [
-  {
-    id: '1',
-    title: 'イニシャル刻印レザーウォレット',
-    creator: 'leather_works',
-    price: 6800,
-    category: '革',
-    image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80',
-    tags: ['ウォレット', 'ギフト'],
-    rating: 4.9,
-    sold: 128,
-  },
-  {
-    id: '2',
-    title: '真鍮製ネームプレート（彫刻入り）',
-    creator: 'metal_forge',
-    price: 4500,
-    category: '金属',
-    image: 'https://images.unsplash.com/photo-1611010344444-5f9e4d86a6c8?w=400&q=80',
-    tags: ['表札', 'オフィス'],
-    rating: 4.8,
-    sold: 94,
-  },
-  {
-    id: '3',
-    title: 'エッチングガラスフォトフレーム',
-    creator: 'glass_studio',
-    price: 5200,
-    category: 'ガラス',
-    image: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80',
-    tags: ['フォトフレーム', 'インテリア'],
-    rating: 4.7,
-    sold: 56,
-  },
-  {
-    id: '4',
-    title: 'スチールキーホルダー（家紋彫刻）',
-    creator: 'metal_forge',
-    price: 2800,
-    category: '金属',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-    tags: ['キーホルダー', '家紋'],
-    rating: 5.0,
-    sold: 203,
-  },
-  {
-    id: '5',
-    title: 'ハンドステッチ名刺入れ（イニシャル刻印）',
-    creator: 'artisan_kei',
-    price: 5800,
-    category: '革',
-    image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=400&q=80',
-    tags: ['名刺入れ', 'ビジネス'],
-    rating: 4.9,
-    sold: 77,
-  },
-  {
-    id: '6',
-    title: '彫刻入りクリスタルグラス（ペア）',
-    creator: 'glass_studio',
-    price: 9800,
-    category: 'ガラス',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-    tags: ['グラス', 'ペアギフト'],
-    rating: 4.8,
-    sold: 41,
-  },
-];
-
-const CATEGORIES = [
-  { id: 'all',    label: 'すべて',  emoji: '✦', color: GOLD,    bg: '#3D2A00' },
-  { id: 'metal',  label: '金属',    emoji: '⚙️', color: '#94A3B8', bg: '#1E293B' },
-  { id: 'leather',label: '革',      emoji: '🪵', color: ACCENT,  bg: '#2A1508' },
-  { id: 'glass',  label: 'ガラス',  emoji: '💎', color: '#67E8F9', bg: '#0C4A6E' },
-];
-
-const CATEGORY_COLOR: Record<string, string> = {
-  '金属': '#64748B',
-  '革':   ACCENT,
-  'ガラス':'#0EA5E9',
-};
-
-// ── Sub-components ───────────────────────────────────────────
-
-/** Supabase connection status banner */
 function ConnectionBanner() {
   const [status, setStatus]   = useState<ConnectionStatus>('checking');
-  const [message, setMessage] = useState('Supabase 接続確認中...');
+  const [message, setMessage] = useState('接続確認中...');
 
   useEffect(() => {
     checkConnection().then(({ ok, message: msg }) => {
@@ -153,7 +69,8 @@ const cb = StyleSheet.create({
   text: { fontSize: 12 },
 });
 
-/** Header */
+// ── Header ───────────────────────────────────────────────────
+
 function Header({ session }: { session: Session | null }) {
   const router = useRouter();
   async function handleLogout() {
@@ -162,77 +79,92 @@ function Header({ session }: { session: Session | null }) {
   }
   return (
     <View style={s.header}>
-      <View style={s.logoRow}>
-        <View style={s.logoMark} />
-        <Text style={s.logoText}>CraftShare</Text>
-      </View>
+      {/* Logo */}
+      <TouchableOpacity style={s.logoRow} activeOpacity={0.85}>
+        <View style={s.logoAccent} />
+        <Text style={s.logoText}>Arte</Text>
+        <View style={s.logoDot} />
+      </TouchableOpacity>
+
+      {/* Auth */}
       {session ? (
         <View style={s.headerRight}>
-          <Text style={s.userEmail} numberOfLines={1}>
-            {session.user.email?.split('@')[0]}
-          </Text>
-          <TouchableOpacity style={s.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
+          <Text style={s.userLabel}>{session.user.email?.split('@')[0]}</Text>
+          <TouchableOpacity style={s.logoutBtn} onPress={handleLogout}>
             <Text style={s.logoutBtnText}>ログアウト</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        <TouchableOpacity style={s.loginBtn} onPress={() => router.replace('/auth')} activeOpacity={0.8}>
-          <Text style={s.loginBtnText}>ログイン</Text>
-        </TouchableOpacity>
+        <View style={s.headerRight}>
+          <TouchableOpacity onPress={() => router.replace('/auth')}>
+            <Text style={s.headerLink}>ログイン</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.headerSignup} onPress={() => router.replace('/auth')}>
+            <Text style={s.headerSignupText}>無料で始める</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
 }
 
-/** Hero section */
+// ── Hero ─────────────────────────────────────────────────────
+
 function HeroSection() {
   const [query, setQuery] = useState('');
-  const router = useRouter();
 
   return (
     <View style={s.hero}>
-      {/* Eyebrow */}
-      <Text style={s.heroEyebrow}>CRAFTED BY CREATORS · MADE BY CRAFTSMEN</Text>
+      {/* Tag line */}
+      <View style={s.heroTag}>
+        <Sparkles size={12} color={GOLD} style={{ marginRight: 6 }} />
+        <Text style={s.heroTagText}>クリエイターと出会う、新しいEC体験</Text>
+      </View>
 
       {/* Main headline */}
       <Text style={s.heroTitle}>
-        あなたのデザインが、{'\n'}一生モノのアイテムに。
+        どこにもないデザインを、{'\n'}あなたが作り{'\n'}あなたが使う
       </Text>
 
-      {/* Sub-copy */}
+      {/* Sub copy */}
       <Text style={s.heroSub}>
-        クリエイターの独自デザインが刻まれた、{'\n'}こだわりの金属・革・ガラス製品を見つけよう。
+        作り手と使い手を作品がつなぐプラットフォーム
       </Text>
 
       {/* Search bar */}
       <View style={s.searchWrap}>
-        <Search size={18} color={GRAY} style={{ marginRight: 10 }} />
+        <Search size={18} color={GRAY} />
         <TextInput
           value={query}
           onChangeText={setQuery}
           placeholder="商品名やハッシュタグで検索"
-          placeholderTextColor={GRAY}
+          placeholderTextColor="#6B5B4B"
           style={s.searchInput}
           returnKeyType="search"
         />
-        {query.length > 0 && (
-          <TouchableOpacity
-            style={s.searchBtn}
-            activeOpacity={0.85}
-            onPress={() => {}}
-          >
-            <Text style={s.searchBtnText}>検索</Text>
+        <TouchableOpacity style={s.searchBtn} activeOpacity={0.88}>
+          <Text style={s.searchBtnText}>検索</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Search hints */}
+      <View style={s.searchHints}>
+        {['#刻印', '#革財布', '#名入れ', '#ガラス彫刻', '#金属表札'].map((hint) => (
+          <TouchableOpacity key={hint} style={s.hintChip} activeOpacity={0.8}>
+            <Text style={s.hintText}>{hint}</Text>
           </TouchableOpacity>
-        )}
+        ))}
       </View>
 
       {/* CTA buttons */}
       <View style={s.ctaRow}>
         <TouchableOpacity style={s.ctaPrimary} activeOpacity={0.88}>
+          <ShoppingBag size={18} color={BROWN} style={{ marginRight: 8 }} />
           <Text style={s.ctaPrimaryText}>商品を探す</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={s.ctaOutline} activeOpacity={0.88}>
-          <Text style={s.ctaOutlineText}>デザインを出品する</Text>
+        <TouchableOpacity style={s.ctaSecondary} activeOpacity={0.88}>
+          <Pencil size={16} color={GOLD_L} style={{ marginRight: 8 }} />
+          <Text style={s.ctaSecondaryText}>デザインを出品する</Text>
         </TouchableOpacity>
       </View>
 
@@ -241,7 +173,7 @@ function HeroSection() {
         {[
           { value: '2,400+', label: 'クリエイター' },
           { value: '18,000+', label: '商品数' },
-          { value: '4.9',    label: '平均評価' },
+          { value: '4.9 ★',  label: '平均評価' },
         ].map((stat) => (
           <View key={stat.label} style={s.statItem}>
             <Text style={s.statValue}>{stat.value}</Text>
@@ -253,15 +185,155 @@ function HeroSection() {
   );
 }
 
-/** Category nav */
+// ── How it works ─────────────────────────────────────────────
+
+function HowItWorksSection() {
+  return (
+    <View style={s.howSection}>
+      {/* Section header */}
+      <View style={s.howHeader}>
+        <View style={s.sectionAccentLine} />
+        <Text style={s.howTitle}>Arteの仕組み</Text>
+        <Text style={s.howSubtitle}>クリエイターとバイヤーを、職人の技がつなぐ</Text>
+      </View>
+
+      {/* Diagram */}
+      <View style={[s.diagram, isWeb && s.diagramWeb]}>
+
+        {/* ── Creator ── */}
+        <View style={[s.diagBox, s.diagCreator]}>
+          <View style={[s.diagIconWrap, { backgroundColor: '#1E1200', borderColor: GOLD }]}>
+            <Lightbulb size={24} color={GOLD} />
+          </View>
+          <Text style={[s.diagRole, { color: GOLD }]}>Creator</Text>
+          <Text style={s.diagRoleJp}>クリエイター</Text>
+          <View style={s.diagDivider} />
+          {[
+            { Icon: ImageIcon,   text: 'デザインを投稿' },
+            { Icon: DollarSign,  text: '利益マージンを設定' },
+            { Icon: Star,        text: '作品を世界に公開' },
+          ].map(({ Icon, text }) => (
+            <View key={text} style={s.diagItem}>
+              <Icon size={13} color={GOLD} style={{ marginRight: 6 }} />
+              <Text style={s.diagItemText}>{text}</Text>
+            </View>
+          ))}
+          <TouchableOpacity style={s.diagCta} activeOpacity={0.85}>
+            <Text style={s.diagCtaText}>出品を始める →</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Arrow / connector ── */}
+        {isWeb ? (
+          <View style={s.arrowWrap}>
+            <View style={s.arrowLine} />
+            <ArrowRight size={20} color={GOLD} />
+          </View>
+        ) : (
+          <View style={s.arrowDown}>
+            <Text style={s.arrowDownText}>↓</Text>
+          </View>
+        )}
+
+        {/* ── Arte Craft (center) ── */}
+        <View style={[s.diagBox, s.diagCraft]}>
+          <View style={s.craftBadge}>
+            <Text style={s.craftBadgeText}>中心</Text>
+          </View>
+          <View style={[s.diagIconWrap, { backgroundColor: '#2A1200', borderColor: ACCENT, width: 64, height: 64 }]}>
+            <Hammer size={30} color={ACCENT} />
+          </View>
+          <Text style={[s.diagRole, { color: ACCENT, fontSize: 20 }]}>Arte Craft</Text>
+          <Text style={[s.diagRoleJp, { color: '#A87050' }]}>製造・発送</Text>
+          <View style={[s.diagDivider, { borderColor: '#3D2010' }]} />
+
+          {/* Material badges */}
+          <View style={s.materialRow}>
+            {[
+              { label: '⚙️ 金属', color: '#94A3B8', bg: '#1E293B' },
+              { label: '🪵 革',   color: ACCENT,    bg: '#2A1508' },
+              { label: '💎 ガラス', color: '#67E8F9', bg: '#0C4A6E' },
+            ].map((m) => (
+              <View key={m.label} style={[s.matBadge, { backgroundColor: m.bg, borderColor: m.color + '60' }]}>
+                <Text style={[s.matBadgeText, { color: m.color }]}>{m.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {[
+            { Icon: Hammer,  text: '高品質な彫刻・加工' },
+            { Icon: Package, text: '丁寧な梱包' },
+            { Icon: Truck,   text: '全国発送対応' },
+          ].map(({ Icon, text }) => (
+            <View key={text} style={s.diagItem}>
+              <Icon size={13} color={ACCENT} style={{ marginRight: 6 }} />
+              <Text style={[s.diagItemText, { color: '#C8A96E' }]}>{text}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* ── Arrow / connector ── */}
+        {isWeb ? (
+          <View style={s.arrowWrap}>
+            <View style={s.arrowLine} />
+            <ArrowRight size={20} color={GOLD} />
+          </View>
+        ) : (
+          <View style={s.arrowDown}>
+            <Text style={s.arrowDownText}>↓</Text>
+          </View>
+        )}
+
+        {/* ── Buyer ── */}
+        <View style={[s.diagBox, s.diagBuyer]}>
+          <View style={[s.diagIconWrap, { backgroundColor: '#052E16', borderColor: SUCCESS }]}>
+            <ShoppingBag size={24} color={SUCCESS} />
+          </View>
+          <Text style={[s.diagRole, { color: SUCCESS }]}>Buyer</Text>
+          <Text style={s.diagRoleJp}>バイヤー</Text>
+          <View style={[s.diagDivider, { borderColor: '#1A3A25' }]} />
+          {[
+            { Icon: Search,   text: '作品を探す・購入する' },
+            { Icon: Heart,    text: '世界に一つのアイテム' },
+            { Icon: Star,     text: 'レビューでお礼を伝える' },
+          ].map(({ Icon, text }) => (
+            <View key={text} style={s.diagItem}>
+              <Icon size={13} color={SUCCESS} style={{ marginRight: 6 }} />
+              <Text style={s.diagItemText}>{text}</Text>
+            </View>
+          ))}
+          <TouchableOpacity style={[s.diagCta, { borderColor: SUCCESS + '50', backgroundColor: SUCCESS + '15' }]} activeOpacity={0.85}>
+            <Text style={[s.diagCtaText, { color: SUCCESS }]}>商品を探す →</Text>
+          </TouchableOpacity>
+        </View>
+
+      </View>
+
+      {/* Flow caption */}
+      <Text style={s.diagramCaption}>
+        クリエイターの売上はArteが自動で精算。面倒な製造・発送はすべて当社が担当します。
+      </Text>
+    </View>
+  );
+}
+
+// ── Category nav ─────────────────────────────────────────────
+
+const CATEGORIES = [
+  { id: 'all',     label: 'すべて',    emoji: '✦',  color: GOLD,      bg: '#2C1F00' },
+  { id: 'metal',   label: '金属',      emoji: '⚙️',  color: '#94A3B8', bg: '#1E293B' },
+  { id: 'leather', label: '革',        emoji: '🪵',  color: ACCENT,    bg: '#2A1508' },
+  { id: 'glass',   label: 'ガラス',    emoji: '💎',  color: '#67E8F9', bg: '#0C4A6E' },
+];
+
 function CategorySection() {
   const [active, setActive] = useState('all');
   return (
     <View style={s.catSection}>
       <View style={s.sectionHeader}>
         <View style={s.sectionTitleRow}>
-          <View style={s.sectionAccent} />
-          <Text style={s.sectionTitle}>カテゴリーから探す</Text>
+          <View style={s.sectionAccentBar} />
+          <Text style={s.sectionTitleDark}>カテゴリーから探す</Text>
         </View>
       </View>
       <View style={s.catGrid}>
@@ -277,9 +349,7 @@ function CategorySection() {
               <View style={[s.catIconWrap, { backgroundColor: cat.bg }]}>
                 <Text style={s.catEmoji}>{cat.emoji}</Text>
               </View>
-              <Text style={[s.catLabel, isActive && { color: cat.color }]}>
-                {cat.label}
-              </Text>
+              <Text style={[s.catLabel, isActive && { color: cat.color }]}>{cat.label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -288,179 +358,57 @@ function CategorySection() {
   );
 }
 
-/** How it Works */
-const HOW_STEPS = [
-  {
-    num: '01',
-    icon: Lightbulb,
-    title: 'Idea',
-    color: GOLD,
-    bg: '#2C1F00',
-    desc: 'クリエイターがデザインをアップロードし、利益マージンを設定。販売価格は製造コスト＋マージンで自動計算されます。',
-  },
-  {
-    num: '02',
-    icon: Hammer,
-    title: 'Craft',
-    color: ACCENT,
-    bg: '#2A1200',
-    desc: '当社の職人チームが金属・革・ガラスへ高品質な彫刻・加工を施し、丁寧に製造します。',
-  },
-  {
-    num: '03',
-    icon: Truck,
-    title: 'Deliver',
-    color: '#22C55E',
-    bg: '#052E16',
-    desc: 'バイヤーの元へ、世界に一つのアイテムを安全・迅速にお届け。クリエイターには利益が自動入金されます。',
-  },
-];
+// ── Pickup placeholder ───────────────────────────────────────
 
-function HowItWorksSection() {
+function PickupSection() {
   return (
-    <View style={s.howSection}>
+    <View style={s.pickupSection}>
       <View style={s.sectionHeader}>
         <View style={s.sectionTitleRow}>
-          <View style={[s.sectionAccent, { backgroundColor: GOLD }]} />
-          <Text style={[s.sectionTitle, { color: CREAM2 }]}>CraftShareの仕組み</Text>
+          <View style={s.sectionAccentBar} />
+          <Text style={s.sectionTitleDark}>注目のアイテム</Text>
         </View>
-        <Text style={s.howSubtitle}>3ステップで、アイデアが一生モノに</Text>
       </View>
 
-      <View style={[s.howSteps, isWeb && s.howStepsWeb]}>
-        {HOW_STEPS.map((step, idx) => {
-          const Icon = step.icon;
-          return (
-            <View key={step.num} style={[s.howStep, isWeb && s.howStepWeb]}>
-              {/* Connector line */}
-              {idx < HOW_STEPS.length - 1 && isWeb && (
-                <View style={s.connector} />
-              )}
-              {/* Icon circle */}
-              <View style={[s.howIconCircle, { backgroundColor: step.bg, borderColor: step.color }]}>
-                <Icon size={28} color={step.color} />
-              </View>
-              {/* Number */}
-              <Text style={[s.howNum, { color: step.color }]}>{step.num}</Text>
-              <Text style={s.howTitle}>{step.title}</Text>
-              <Text style={s.howDesc}>{step.desc}</Text>
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
-/** Product card */
-function ProductCard({ product }: { product: typeof PRODUCTS[number] }) {
-  const [liked, setLiked]       = useState(false);
-  const [imgError, setImgError] = useState(false);
-  const catColor = CATEGORY_COLOR[product.category] ?? GRAY;
-
-  return (
-    <TouchableOpacity style={s.card} activeOpacity={0.9}>
-      {/* Image */}
-      <View style={s.cardImgWrap}>
-        {!imgError ? (
-          <Image
-            source={{ uri: product.image }}
-            style={s.cardImg}
-            resizeMode="cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <View style={[s.cardImg, s.cardImgFallback]}>
-            <Package size={36} color={GRAY} />
-          </View>
-        )}
-        {/* Category badge */}
-        <View style={[s.catBadge, { backgroundColor: catColor + '30', borderColor: catColor + '60' }]}>
-          <Text style={[s.catBadgeText, { color: catColor }]}>{product.category}</Text>
+      {/* Placeholder */}
+      <View style={s.placeholder}>
+        <View style={s.placeholderIcon}>
+          <Search size={40} color={GRAY} />
         </View>
-        {/* Like button */}
-        <TouchableOpacity
-          style={s.likeBtn}
-          onPress={() => setLiked(!liked)}
-          activeOpacity={0.8}
-        >
-          <Heart
-            size={16}
-            color={liked ? '#F87171' : '#A8A29E'}
-            fill={liked ? '#F87171' : 'transparent'}
-          />
+        <Text style={s.placeholderTitle}>作品を検索して見つけよう</Text>
+        <Text style={s.placeholderSub}>
+          クリエイターたちのユニークなデザインが{'\n'}近日公開予定です。
+        </Text>
+        <TouchableOpacity style={s.placeholderBtn} activeOpacity={0.85}>
+          <Search size={15} color={BROWN} style={{ marginRight: 6 }} />
+          <Text style={s.placeholderBtnText}>商品を探す</Text>
         </TouchableOpacity>
-      </View>
 
-      {/* Body */}
-      <View style={s.cardBody}>
-        <Text style={s.cardTitle} numberOfLines={2}>{product.title}</Text>
-        <Text style={s.cardCreator}>by {product.creator}</Text>
-
-        {/* Rating + sold */}
-        <View style={s.cardMeta}>
-          <Star size={12} color={GOLD} fill={GOLD} />
-          <Text style={s.cardRating}>{product.rating}</Text>
-          <Text style={s.cardSold}>· {product.sold}件販売</Text>
-        </View>
-
-        <View style={s.cardFooter}>
-          <Text style={s.cardPrice}>¥{product.price.toLocaleString()}</Text>
-          <TouchableOpacity style={s.cardOrderBtn} activeOpacity={0.85}>
-            <Text style={s.cardOrderBtnText}>購入する</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Tags */}
-        <View style={s.tagRow}>
-          {product.tags.map((tag) => (
-            <View key={tag} style={s.tag}>
-              <Text style={s.tagText}>#{tag}</Text>
+        {/* Hint tags */}
+        <View style={s.placeholderTags}>
+          {['#刻印', '#名入れ', '#革財布', '#表札', '#ガラス彫刻'].map((tag) => (
+            <View key={tag} style={s.placeholderTag}>
+              <Text style={s.placeholderTagText}>{tag}</Text>
             </View>
           ))}
         </View>
       </View>
-    </TouchableOpacity>
-  );
-}
-
-/** Pickup products section */
-function PickupSection() {
-  const cardW = isWeb ? Math.min(300, (width - 160) / 3) : width - 40;
-  return (
-    <View style={s.section}>
-      <View style={s.sectionHeader}>
-        <View style={s.sectionTitleRow}>
-          <View style={s.sectionAccent} />
-          <Text style={s.sectionTitle}>注目のアイテム</Text>
-        </View>
-        <TouchableOpacity style={s.moreBtn}>
-          <Text style={s.moreBtnText}>すべて見る</Text>
-          <ChevronRight size={14} color={ACCENT} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={[s.cardGrid, isWeb && s.cardGridWeb]}>
-        {PRODUCTS.map((p) => (
-          <View key={p.id} style={[s.cardWrap, isWeb && { width: cardW }]}>
-            <ProductCard product={p} />
-          </View>
-        ))}
-      </View>
     </View>
   );
 }
 
-/** Footer */
+// ── Footer ───────────────────────────────────────────────────
+
 function Footer() {
   return (
     <View style={s.footer}>
-      <View style={s.logoRow}>
-        <View style={s.logoMark} />
-        <Text style={[s.logoText, { fontSize: 20 }]}>CraftShare</Text>
+      <View style={s.footerLogoRow}>
+        <View style={s.logoAccent} />
+        <Text style={[s.logoText, { fontSize: 20 }]}>Arte</Text>
+        <View style={s.logoDot} />
       </View>
       <Text style={s.footerSub}>
-        クリエイターの独自デザインが職人の技で形に。{'\n'}世界に一つのアイテムをあなたの元へ。
+        作り手と使い手を作品がつなぐプラットフォーム
       </Text>
       <View style={s.footerLinks}>
         {['利用規約', 'プライバシーポリシー', 'お問い合わせ', 'クリエイターガイド'].map((link) => (
@@ -469,7 +417,7 @@ function Footer() {
           </TouchableOpacity>
         ))}
       </View>
-      <Text style={s.footerCopy}>© 2025 CraftShare Inc. All rights reserved.</Text>
+      <Text style={s.footerCopy}>© 2025 Arte Inc. All rights reserved.</Text>
     </View>
   );
 }
@@ -512,114 +460,128 @@ const s = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 24, paddingVertical: 16,
-    backgroundColor: BROWN,
-    borderBottomWidth: 1, borderBottomColor: BROWN3,
+    backgroundColor: BROWN, borderBottomWidth: 1, borderBottomColor: '#2A1508',
   },
-  logoRow:   { flexDirection: 'row', alignItems: 'center' },
-  logoMark:  { width: 5, height: 26, backgroundColor: GOLD, borderRadius: 3, marginRight: 10 },
-  logoText:  { color: GOLD_L, fontSize: 22, fontWeight: '800', letterSpacing: 2 },
-  headerRight:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  userEmail:     { color: GOLD_L, fontSize: 12, maxWidth: 100 },
-  loginBtn:      { borderWidth: 1, borderColor: GOLD, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  loginBtnText:  { color: GOLD, fontSize: 13, fontWeight: '600' },
-  logoutBtn:     { borderWidth: 1, borderColor: BROWN3, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },
-  logoutBtnText: { color: GRAY, fontSize: 12, fontWeight: '600' },
+  logoRow:    { flexDirection: 'row', alignItems: 'center' },
+  logoAccent: { width: 4, height: 26, backgroundColor: GOLD, borderRadius: 3, marginRight: 8 },
+  logoText:   { color: GOLD_L, fontSize: 26, fontWeight: '900', letterSpacing: 3, fontStyle: 'italic' },
+  logoDot:    { width: 5, height: 5, borderRadius: 3, backgroundColor: GOLD, marginLeft: 3, marginTop: 10 },
+  footerLogoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  headerRight:   { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  userLabel:     { color: GOLD_L, fontSize: 12 },
+  headerLink:    { color: GRAY, fontSize: 13, fontWeight: '600' },
+  headerSignup:  { backgroundColor: GOLD, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  headerSignupText: { color: BROWN, fontSize: 13, fontWeight: '700' },
+  logoutBtn:     { borderWidth: 1, borderColor: '#3D2010', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
+  logoutBtnText: { color: GRAY, fontSize: 12 },
 
   // Hero
   hero: {
     backgroundColor: BROWN,
     paddingHorizontal: isWeb ? 72 : 24,
-    paddingTop: isWeb ? 72 : 48,
-    paddingBottom: 56,
+    paddingTop: isWeb ? 80 : 52,
+    paddingBottom: 60,
   },
-  heroEyebrow: {
-    color: GOLD, fontSize: 10, fontWeight: '700',
-    letterSpacing: 3, marginBottom: 18,
+  heroTag: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#2C1F00', borderWidth: 1, borderColor: '#4A3510',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+    marginBottom: 24,
   },
+  heroTagText: { color: GOLD, fontSize: 11, fontWeight: '600' },
   heroTitle: {
     color: WHITE,
-    fontSize: isWeb ? 56 : 34,
-    fontWeight: '800',
-    lineHeight: isWeb ? 70 : 46,
-    marginBottom: 18,
+    fontSize: isWeb ? 58 : 34,
+    fontWeight: '900',
+    lineHeight: isWeb ? 74 : 48,
+    marginBottom: 20,
+    letterSpacing: -0.5,
   },
   heroSub: {
     color: '#C8B8A8',
-    fontSize: isWeb ? 18 : 15,
-    lineHeight: 28,
-    marginBottom: 32,
-    maxWidth: 560,
+    fontSize: isWeb ? 20 : 16,
+    lineHeight: 30,
+    marginBottom: 36,
+    maxWidth: 500,
   },
 
   // Search
   searchWrap: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#2A1508',
-    borderWidth: 1, borderColor: '#4A3020',
-    borderRadius: 14,
-    paddingHorizontal: 16, paddingVertical: Platform.OS === 'web' ? 12 : 8,
-    marginBottom: 28,
-    maxWidth: 560,
+    backgroundColor: '#231309',
+    borderWidth: 1.5, borderColor: '#4A3020',
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: Platform.OS === 'web' ? 14 : 10,
+    marginBottom: 12,
+    maxWidth: 600,
+    gap: 10,
   },
   searchInput: {
     flex: 1, color: WHITE, fontSize: 15,
-    height: Platform.OS === 'web' ? 'auto' : 36,
+    height: Platform.OS === 'web' ? 'auto' as any : 36,
   },
   searchBtn: {
     backgroundColor: GOLD, borderRadius: 10,
-    paddingHorizontal: 14, paddingVertical: 6, marginLeft: 8,
+    paddingHorizontal: 18, paddingVertical: 8,
   },
-  searchBtnText: { color: BROWN, fontWeight: '700', fontSize: 13 },
+  searchBtnText: { color: BROWN, fontWeight: '800', fontSize: 14 },
+
+  // Search hints
+  searchHints: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 32, maxWidth: 600,
+  },
+  hintChip: {
+    borderWidth: 1, borderColor: '#4A3020',
+    paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20,
+  },
+  hintText: { color: '#8B7355', fontSize: 12 },
 
   // CTA
   ctaRow: {
     flexDirection: isWeb ? 'row' : 'column',
-    gap: 12, marginBottom: 44,
+    gap: 14, marginBottom: 48,
     alignItems: isWeb ? 'center' : 'stretch',
   },
   ctaPrimary: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     backgroundColor: GOLD,
-    paddingHorizontal: 36, paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-    alignSelf: isWeb ? 'auto' : 'stretch',
-    shadowColor: GOLD, shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35, shadowRadius: 12, elevation: 6,
+    paddingHorizontal: 36, paddingVertical: 18,
+    borderRadius: 16, alignSelf: isWeb ? 'auto' : 'stretch',
+    shadowColor: GOLD, shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4, shadowRadius: 16, elevation: 8,
   },
   ctaPrimaryText: { color: BROWN, fontSize: 16, fontWeight: '800' },
-  ctaOutline: {
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.25)',
-    paddingHorizontal: 36, paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-    alignSelf: isWeb ? 'auto' : 'stretch',
+  ctaSecondary: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: 'rgba(212,160,23,0.35)',
+    paddingHorizontal: 36, paddingVertical: 18,
+    borderRadius: 16, alignSelf: isWeb ? 'auto' : 'stretch',
   },
-  ctaOutlineText: { color: WHITE, fontSize: 16, fontWeight: '600' },
+  ctaSecondaryText: { color: GOLD_L, fontSize: 16, fontWeight: '600' },
 
   // Stats
   statsRow: {
-    flexDirection: 'row', gap: isWeb ? 48 : 24,
-    paddingTop: 24, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)',
+    flexDirection: 'row', gap: isWeb ? 56 : 28,
+    paddingTop: 28,
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.07)',
   },
   statItem:  { alignItems: 'flex-start' },
-  statValue: { color: GOLD_L, fontSize: isWeb ? 28 : 22, fontWeight: '800' },
-  statLabel: { color: '#8B7355', fontSize: 12, marginTop: 2 },
+  statValue: { color: GOLD_L, fontSize: isWeb ? 28 : 22, fontWeight: '900' },
+  statLabel: { color: '#6B5B4B', fontSize: 12, marginTop: 3 },
 
   // Section commons
   sectionHeader: {
-    flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: isWeb ? 64 : 20, marginBottom: 24,
   },
-  sectionTitleRow: { flexDirection: 'row', alignItems: 'center' },
-  sectionAccent:   { width: 4, height: 24, backgroundColor: ACCENT, borderRadius: 2, marginRight: 12 },
-  sectionTitle:    { color: BROWN, fontSize: isWeb ? 22 : 19, fontWeight: '800' },
-  moreBtn:         { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  moreBtnText:     { color: ACCENT, fontSize: 13, fontWeight: '600' },
+  sectionTitleRow:  { flexDirection: 'row', alignItems: 'center' },
+  sectionAccentBar: { width: 4, height: 22, backgroundColor: ACCENT, borderRadius: 2, marginRight: 12 },
+  sectionTitleDark: { color: BROWN, fontSize: isWeb ? 22 : 19, fontWeight: '800' },
 
-  // Categories
-  catSection: {
-    backgroundColor: CREAM, paddingTop: 44, paddingBottom: 40,
-  },
+  // Category
+  catSection: { backgroundColor: CREAM, paddingTop: 48, paddingBottom: 40 },
   catGrid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 12,
     paddingHorizontal: isWeb ? 64 : 20,
@@ -631,104 +593,158 @@ const s = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: WHITE,
     borderRadius: 20,
-    paddingVertical: 18,
-    paddingHorizontal: 12,
+    paddingVertical: 18, paddingHorizontal: 12,
     borderWidth: 1.5, borderColor: GRAY_L,
     shadowColor: BROWN, shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.07, shadowRadius: 8, elevation: 2,
   },
   catIconWrap: {
-    width: 56, height: 56, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 10,
+    width: 52, height: 52, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 8,
   },
-  catEmoji: { fontSize: 24 },
-  catLabel: { color: BROWN, fontSize: 14, fontWeight: '700' },
+  catEmoji: { fontSize: 22 },
+  catLabel: { color: BROWN, fontSize: 13, fontWeight: '700' },
 
   // How it works
   howSection: {
     backgroundColor: BROWN2,
-    paddingTop: 56, paddingBottom: 60,
+    paddingTop: 56, paddingBottom: 64,
   },
-  howSubtitle: {
-    color: '#8B7355', fontSize: 13,
+  howHeader: {
     paddingHorizontal: isWeb ? 64 : 20,
-    marginTop: -16, marginBottom: 36,
+    marginBottom: 40,
   },
-  howSteps: {
-    paddingHorizontal: isWeb ? 64 : 20,
-    gap: 20,
+  sectionAccentLine: {
+    width: 40, height: 3, backgroundColor: GOLD,
+    borderRadius: 2, marginBottom: 16,
   },
-  howStepsWeb: { flexDirection: 'row', alignItems: 'flex-start' },
-  howStep: {
+  howTitle: {
+    color: CREAM2, fontSize: isWeb ? 28 : 22,
+    fontWeight: '900', marginBottom: 8,
+  },
+  howSubtitle: { color: '#6B5B4B', fontSize: 14 },
+
+  // Diagram
+  diagram: {
+    paddingHorizontal: isWeb ? 64 : 16,
+    gap: 0,
+  },
+  diagramWeb: {
+    flexDirection: 'row', alignItems: 'stretch',
+  },
+  diagramCaption: {
+    color: '#4A3020', fontSize: 12, textAlign: 'center',
+    marginTop: 28, paddingHorizontal: isWeb ? 64 : 24,
+    lineHeight: 18,
+  },
+
+  // Diagram boxes
+  diagBox: {
     flex: isWeb ? 1 : undefined,
-    backgroundColor: '#1a0f0a',
     borderRadius: 20,
     padding: 24,
-    borderWidth: 1, borderColor: BROWN3,
-    position: 'relative',
-  },
-  howStepWeb: { marginHorizontal: 8 },
-  connector: {
-    position: 'absolute', top: 40, right: -16, width: 32, height: 1,
-    backgroundColor: BROWN3, zIndex: 2,
-  },
-  howIconCircle: {
-    width: 60, height: 60, borderRadius: 18,
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: 16,
     borderWidth: 1,
+    marginBottom: isWeb ? 0 : 0,
   },
-  howNum:   { color: GRAY, fontSize: 11, fontWeight: '700', letterSpacing: 2, marginBottom: 4 },
-  howTitle: { color: WHITE, fontSize: 20, fontWeight: '800', marginBottom: 10 },
-  howDesc:  { color: '#8B7355', fontSize: 13, lineHeight: 21 },
+  diagCreator: {
+    backgroundColor: '#1C1200', borderColor: '#3D2E00',
+  },
+  diagCraft: {
+    backgroundColor: '#1C0D00', borderColor: '#4A2000',
+    flex: isWeb ? 1.3 : undefined,
+    marginHorizontal: isWeb ? 8 : 0,
+    marginVertical: isWeb ? 0 : 8,
+  },
+  diagBuyer: {
+    backgroundColor: '#071A10', borderColor: '#0F3020',
+  },
+  craftBadge: {
+    position: 'absolute', top: 14, right: 14,
+    backgroundColor: ACCENT + '20', borderWidth: 1, borderColor: ACCENT + '40',
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
+  },
+  craftBadgeText: { color: ACCENT, fontSize: 10, fontWeight: '700' },
 
-  // Products section
-  section: { backgroundColor: CREAM, paddingTop: 48, paddingBottom: 56 },
-  cardGrid: { paddingHorizontal: isWeb ? 64 : 16, gap: 20 },
-  cardGridWeb: { flexDirection: 'row', flexWrap: 'wrap' },
-  cardWrap: { marginBottom: 4 },
-
-  // Card
-  card: {
-    backgroundColor: WHITE, borderRadius: 20, overflow: 'hidden',
-    shadowColor: BROWN, shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1, shadowRadius: 16, elevation: 4,
-  },
-  cardImgWrap:    { width: '100%', height: 200, position: 'relative' },
-  cardImg:        { width: '100%', height: '100%' },
-  cardImgFallback:{ backgroundColor: GRAY_L, alignItems: 'center', justifyContent: 'center' },
-  catBadge: {
-    position: 'absolute', top: 12, left: 12,
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1,
-  },
-  catBadgeText: { fontSize: 11, fontWeight: '700' },
-  likeBtn: {
-    position: 'absolute', top: 12, right: 12,
-    width: 34, height: 34, borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+  diagIconWrap: {
+    width: 52, height: 52, borderRadius: 16,
     alignItems: 'center', justifyContent: 'center',
+    marginBottom: 12, borderWidth: 1,
   },
-  cardBody:      { padding: 16 },
-  cardTitle:     { color: '#1C1917', fontSize: 15, fontWeight: '700', lineHeight: 22, marginBottom: 2 },
-  cardCreator:   { color: GRAY, fontSize: 11, marginBottom: 8 },
-  cardMeta:      { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 10 },
-  cardRating:    { color: GOLD, fontSize: 12, fontWeight: '700' },
-  cardSold:      { color: GRAY, fontSize: 11 },
-  cardFooter:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  cardPrice:     { color: ACCENT, fontSize: 18, fontWeight: '800' },
-  cardOrderBtn:  { backgroundColor: ACCENT, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10 },
-  cardOrderBtnText: { color: WHITE, fontSize: 12, fontWeight: '700' },
-  tagRow:        { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tag:           { backgroundColor: '#F5F5F4', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  tagText:       { color: GRAY, fontSize: 11 },
+  diagRole:   { color: WHITE, fontSize: 18, fontWeight: '900', marginBottom: 2 },
+  diagRoleJp: { color: '#6B5B4B', fontSize: 12, marginBottom: 14 },
+  diagDivider:{ borderTopWidth: 1, borderColor: '#2A1A00', marginBottom: 14 },
+  diagItem:   { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  diagItemText:{ color: '#8B7355', fontSize: 13 },
+  diagCta: {
+    marginTop: 16,
+    borderWidth: 1, borderColor: GOLD + '40',
+    backgroundColor: GOLD + '15',
+    paddingVertical: 10, borderRadius: 10,
+    alignItems: 'center',
+  },
+  diagCtaText: { color: GOLD, fontSize: 13, fontWeight: '700' },
+
+  materialRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 14 },
+  matBadge: {
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 8, borderWidth: 1,
+  },
+  matBadgeText: { fontSize: 12, fontWeight: '600' },
+
+  // Arrows
+  arrowWrap: {
+    alignItems: 'center', justifyContent: 'center',
+    flexDirection: 'row', paddingHorizontal: 4,
+  },
+  arrowLine: { flex: 1, height: 1, backgroundColor: '#3D2010' },
+  arrowDown: { alignItems: 'center', paddingVertical: 8 },
+  arrowDownText: { color: '#3D2010', fontSize: 24 },
+
+  // Pickup / placeholder
+  pickupSection: { backgroundColor: CREAM, paddingTop: 48, paddingBottom: 64 },
+  placeholder: {
+    marginHorizontal: isWeb ? 64 : 20,
+    backgroundColor: WHITE,
+    borderRadius: 24,
+    padding: 48,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: GRAY_L,
+    borderStyle: 'dashed',
+  },
+  placeholderIcon: {
+    width: 80, height: 80, borderRadius: 24,
+    backgroundColor: '#F5F5F4',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 20,
+  },
+  placeholderTitle: {
+    color: BROWN, fontSize: 18, fontWeight: '800', marginBottom: 10,
+  },
+  placeholderSub: {
+    color: GRAY, fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 24,
+  },
+  placeholderBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: GOLD,
+    paddingHorizontal: 28, paddingVertical: 13, borderRadius: 12,
+    marginBottom: 24,
+  },
+  placeholderBtnText: { color: BROWN, fontWeight: '800', fontSize: 15 },
+  placeholderTags: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
+  placeholderTag: {
+    borderWidth: 1, borderColor: GRAY_L,
+    paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20,
+  },
+  placeholderTagText: { color: GRAY, fontSize: 12 },
 
   // Footer
   footer: {
     backgroundColor: BROWN, alignItems: 'center',
-    paddingVertical: 48, paddingHorizontal: 24, gap: 12,
+    paddingVertical: 48, paddingHorizontal: 24, gap: 10,
   },
-  footerSub:   { color: '#6B5B4B', fontSize: 13, textAlign: 'center', lineHeight: 20 },
-  footerLinks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 },
-  footerLink:  { color: '#6B5B4B', fontSize: 12 },
-  footerCopy:  { color: '#3D2510', fontSize: 11, marginTop: 8 },
+  footerSub:   { color: '#4A3020', fontSize: 13, textAlign: 'center' },
+  footerLinks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
+  footerLink:  { color: '#4A3020', fontSize: 12 },
+  footerCopy:  { color: '#2A1508', fontSize: 11, marginTop: 4 },
 });
