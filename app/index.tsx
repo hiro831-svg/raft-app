@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import type { Session } from '@supabase/supabase-js';
 import {
   Search, Lightbulb, Hammer, ShoppingBag,
-  Sparkles, Star, Pencil, Upload,
+  Star, Pencil,
 } from 'lucide-react-native';
 import { supabase, checkConnection, type ConnectionStatus } from '../src/lib/supabase';
 
@@ -109,6 +109,43 @@ function Header({ session }: { session: Session | null }) {
   );
 }
 
+// ── CTA button with hover animation ─────────────────────────
+
+function CtaButton({
+  label,
+  Icon,
+  onPress,
+}: {
+  label: string;
+  Icon: React.ComponentType<{ size: number; color: string; style?: any }>;
+  onPress?: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  const webHandlers: any = Platform.OS === 'web' ? {
+    onMouseEnter: () => setHovered(true),
+    onMouseLeave: () => setHovered(false),
+  } : {};
+
+  const webTransition: any = Platform.OS === 'web' ? {
+    transitionProperty: 'background-color',
+    transitionDuration: '280ms',
+    transitionTimingFunction: 'ease',
+  } : {};
+
+  return (
+    <TouchableOpacity
+      style={[s.ctaBtn, hovered && s.ctaBtnHovered, webTransition]}
+      activeOpacity={0.8}
+      onPress={onPress}
+      {...webHandlers}
+    >
+      <Icon size={17} color={hovered ? '#FFFFFF' : ACCENT} style={{ marginRight: 8 }} />
+      <Text style={[s.ctaBtnText, hovered && { color: '#FFFFFF' }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 // ── Hero ─────────────────────────────────────────────────────
 
 function HeroSection() {
@@ -116,12 +153,6 @@ function HeroSection() {
 
   return (
     <View style={s.hero}>
-      {/* Tag line */}
-      <View style={s.heroTag}>
-        <Sparkles size={12} color={GOLD} style={{ marginRight: 6 }} />
-        <Text style={s.heroTagText}>クリエイターと出会う、新しいEC体験</Text>
-      </View>
-
       {/* Main headline */}
       <Text style={s.heroTitle}>
         {'世界にまだないデザインを作る\n他のどこにもないデザインを見つける'}
@@ -157,16 +188,10 @@ function HeroSection() {
         ))}
       </View>
 
-      {/* CTA buttons — 左: 出品, 右: 購入 */}
+      {/* CTA buttons */}
       <View style={s.ctaRow}>
-        <TouchableOpacity style={s.ctaSecondary} activeOpacity={0.88}>
-          <Pencil size={16} color={ACCENT} style={{ marginRight: 8 }} />
-          <Text style={s.ctaSecondaryText}>デザインを出品する</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={s.ctaPrimary} activeOpacity={0.88}>
-          <ShoppingBag size={18} color={CARD} style={{ marginRight: 8 }} />
-          <Text style={s.ctaPrimaryText}>商品を探す</Text>
-        </TouchableOpacity>
+        <CtaButton label="商品を作る"  Icon={Pencil}      />
+        <CtaButton label="商品を探す"  Icon={ShoppingBag} />
       </View>
     </View>
   );
@@ -413,14 +438,6 @@ const s = StyleSheet.create({
     paddingTop: isWeb ? 80 : 52,
     paddingBottom: 60,
   },
-  heroTag: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#FDF8EC', borderWidth: 1, borderColor: '#FDE68A',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
-    marginBottom: 24,
-  },
-  heroTagText: { color: GOLD, fontSize: 11, fontWeight: '600' },
   heroTitle: {
     color: TEXT,
     fontSize: isWeb ? 52 : 30,
@@ -480,22 +497,16 @@ const s = StyleSheet.create({
     gap: 14,
     alignItems: isWeb ? 'center' : 'stretch',
   },
-  ctaPrimary: {
+  // Shared button style — transparent bg / orange border; hover fills bg via ctaBtnHovered
+  ctaBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: ACCENT,
-    paddingHorizontal: 36, paddingVertical: 18,
-    borderRadius: 16, alignSelf: isWeb ? 'auto' : 'stretch',
-    shadowColor: ACCENT, shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,
-  },
-  ctaPrimaryText: { color: CARD, fontSize: 16, fontWeight: '800' },
-  ctaSecondary: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: ACCENT,
-    paddingHorizontal: 36, paddingVertical: 18,
+    borderWidth: 2, borderColor: ACCENT,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 36, paddingVertical: 17,
     borderRadius: 16, alignSelf: isWeb ? 'auto' : 'stretch',
   },
-  ctaSecondaryText: { color: ACCENT, fontSize: 16, fontWeight: '600' },
+  ctaBtnHovered: { backgroundColor: ACCENT },
+  ctaBtnText:    { color: ACCENT, fontSize: 16, fontWeight: '700' },
 
   // Section commons
   sectionHeader: {
