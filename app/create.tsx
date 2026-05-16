@@ -15,7 +15,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { Image } from 'expo-image';
+import { Image } from 'react-native';
 import {
   ArrowLeft, Upload, CheckSquare, Square,
   ChevronRight, ImageIcon,
@@ -316,7 +316,7 @@ export default function CreateScreen() {
               <Image
                 source={{ uri: imageUri }}
                 style={s.previewImage}
-                contentFit="cover"
+                resizeMode="cover"
               />
             ) : (
               <View style={s.imagePlaceholder}>
