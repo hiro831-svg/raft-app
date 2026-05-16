@@ -15,29 +15,31 @@ import { useRouter } from 'expo-router';
 import type { Session } from '@supabase/supabase-js';
 import {
   Search, Lightbulb, Hammer, ShoppingBag,
-  Sparkles, Package, Heart, Star, Truck,
-  Pencil, DollarSign, Image as ImageIcon,
+  Sparkles, Star, Pencil, Upload,
 } from 'lucide-react-native';
 import { supabase, checkConnection, type ConnectionStatus } from '../src/lib/supabase';
 
 // ── Constants ────────────────────────────────────────────────
 
 const { width } = Dimensions.get('window');
-const isWeb     = width > 700;
+const isWeb = width > 700;
 
-const BG      = '#261710';   // unified background
-const BROWN   = '#1a0f0a';
-const BROWN2  = '#231309';
-const BROWN3  = '#3D2010';
-const ACCENT  = '#C05A00';
-const GOLD    = '#D4A017';
-const GOLD_L  = '#FFD966';
-const CREAM   = '#FFF8F0';
-const CREAM2  = '#F5ECD7';
-const GRAY    = '#78716C';
-const GRAY_L  = '#E7E5E4';
-const WHITE   = '#FFFFFF';
-const SUCCESS = '#16A34A';
+// Light beige theme
+const BG       = '#F5F0E8';   // warm beige — unified background
+const BG_ALT   = '#EDE8DF';   // slightly darker beige for alternate sections
+const CARD     = '#FFFFFF';
+const BORDER   = '#DDD5C8';
+const TEXT     = '#1C1917';   // stone-900
+const TEXT_2   = '#57534E';   // stone-600
+const TEXT_3   = '#A8A29E';   // stone-400
+const ACCENT   = '#C05A00';   // orange
+const GOLD     = '#B8860B';   // dark gold (readable on light bg)
+const GOLD_L   = '#D4A017';
+const SUCCESS  = '#166534';   // green-800
+
+// Diagram square sizes (web only; mobile = auto height)
+const SQ_LARGE = 230;
+const SQ_SMALL = 170;
 
 // ── Connection banner ────────────────────────────────────────
 
@@ -52,13 +54,13 @@ function ConnectionBanner() {
     });
   }, []);
 
-  const bg    = status === 'ok' ? '#14532D' : status === 'error' ? '#7F1D1D' : '#1C1917';
-  const color = status === 'ok' ? '#86EFAC' : status === 'error' ? '#FCA5A5' : '#D6D3D1';
+  const bg    = status === 'ok' ? '#DCFCE7' : status === 'error' ? '#FEE2E2' : '#F5F5F4';
+  const color = status === 'ok' ? '#166534' : status === 'error' ? '#991B1B' : '#78716C';
   const icon  = status === 'ok' ? '✔' : status === 'error' ? '✖' : null;
 
   return (
     <View style={[cb.bar, { backgroundColor: bg }]}>
-      {status === 'checking' && <ActivityIndicator size="small" color="#D6D3D1" style={{ marginRight: 8 }} />}
+      {status === 'checking' && <ActivityIndicator size="small" color="#78716C" style={{ marginRight: 8 }} />}
       {icon && <Text style={[cb.icon, { color }]}>{icon}</Text>}
       <Text style={[cb.text, { color }]}>{message}</Text>
     </View>
@@ -122,22 +124,22 @@ function HeroSection() {
 
       {/* Main headline */}
       <Text style={s.heroTitle}>
-        {'どこにもないデザインを、\nあなたが作り　あなたが使う'}
+        {'世界にまだないデザインを作る\n他のどこにもないデザインを見つける'}
       </Text>
 
       {/* Sub copy */}
       <Text style={s.heroSub}>
-        作り手と使い手を作品がつなぐプラットフォーム
+        クリエイターとカスタマーを作品がつなぐプラットフォーム
       </Text>
 
       {/* Search bar */}
       <View style={s.searchWrap}>
-        <Search size={18} color={GRAY} />
+        <Search size={18} color={TEXT_3} />
         <TextInput
           value={query}
           onChangeText={setQuery}
           placeholder="商品名やハッシュタグで検索"
-          placeholderTextColor="#6B5B4B"
+          placeholderTextColor={TEXT_3}
           style={s.searchInput}
           returnKeyType="search"
         />
@@ -158,11 +160,11 @@ function HeroSection() {
       {/* CTA buttons — 左: 出品, 右: 購入 */}
       <View style={s.ctaRow}>
         <TouchableOpacity style={s.ctaSecondary} activeOpacity={0.88}>
-          <Pencil size={16} color={GOLD_L} style={{ marginRight: 8 }} />
+          <Pencil size={16} color={ACCENT} style={{ marginRight: 8 }} />
           <Text style={s.ctaSecondaryText}>デザインを出品する</Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.ctaPrimary} activeOpacity={0.88}>
-          <ShoppingBag size={18} color={BROWN} style={{ marginRight: 8 }} />
+          <ShoppingBag size={18} color={CARD} style={{ marginRight: 8 }} />
           <Text style={s.ctaPrimaryText}>商品を探す</Text>
         </TouchableOpacity>
       </View>
@@ -175,64 +177,68 @@ function HeroSection() {
 function HowItWorksSection() {
   return (
     <View style={s.howSection}>
-      {/* Section header */}
       <View style={s.howHeader}>
         <View style={s.sectionAccentLine} />
         <Text style={s.howTitle}>Arteの仕組み</Text>
         <Text style={s.howSubtitle}>クリエイターとカスタマーを、職人の技がつなぐ</Text>
       </View>
 
-      {/* Diagram */}
+      {/* Diagram row/column */}
       <View style={[s.diagram, isWeb && s.diagramWeb]}>
 
         {/* ── Creator ── */}
         <View style={[s.diagBox, s.diagCreator]}>
-          <View style={[s.diagIconWrap, { backgroundColor: '#1E1200', borderColor: GOLD }]}>
-            <Lightbulb size={24} color={GOLD} />
+          <View style={[s.diagIconWrap, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
+            <Lightbulb size={22} color="#92400E" />
           </View>
-          <Text style={[s.diagRole, { color: GOLD }]}>Creator</Text>
-          <Text style={s.diagRoleJp}>クリエイター</Text>
-          <View style={s.diagDivider} />
-          <View style={s.diagItem}>
-            <DollarSign size={13} color={GOLD} style={{ marginRight: 6 }} />
-            <Text style={s.diagItemText}>価格を設定</Text>
-          </View>
+          <Text style={[s.diagRole, { color: '#92400E' }]}>Creator</Text>
+          <Text style={[s.diagRoleJp, { color: '#B45309' }]}>クリエイター</Text>
+          <View style={[s.diagDivider, { borderColor: '#FDE68A' }]} />
+          <Text style={[s.diagMainLine, { color: '#78350F' }]}>
+            あなただけのデザインを実現して商品に。
+          </Text>
+          <Text style={s.diagBullet}>・デザインをアップロード。</Text>
+          <Text style={s.diagBullet}>・販売価格を設定。</Text>
           <TouchableOpacity style={s.diagCta} activeOpacity={0.85}>
             <Text style={s.diagCtaText}>出品を始める →</Text>
           </TouchableOpacity>
         </View>
 
-        {/* ── Connector line ── */}
+        {/* ── Connector ── */}
         <View style={isWeb ? s.connectorH : s.connectorV} />
 
-        {/* ── Arte (center, small) ── */}
+        {/* ── Arte (center, smaller) ── */}
         <View style={[s.diagBox, s.diagCraft]}>
-          <View style={[s.diagIconWrap, { backgroundColor: '#2A1200', borderColor: ACCENT }]}>
-            <Hammer size={22} color={ACCENT} />
+          <View style={[s.diagIconWrap, { backgroundColor: '#FFF7ED', borderColor: '#FED7AA' }]}>
+            <Hammer size={20} color={ACCENT} />
           </View>
-          <Text style={[s.diagRole, { color: ACCENT }]}>Arte</Text>
-          <View style={[s.diagDivider, { borderColor: '#3D2010' }]} />
-          <Text style={s.craftDesc}>
+          <Text style={[s.diagRole, { color: ACCENT, fontSize: 15 }]}>Arte</Text>
+          <View style={[s.diagDivider, { borderColor: '#FED7AA' }]} />
+          <Text style={[s.craftDesc, { color: '#9A3412' }]}>
             洗練されたレーザー彫刻・加工でデザインを実現
           </Text>
         </View>
 
-        {/* ── Connector line ── */}
+        {/* ── Connector ── */}
         <View style={isWeb ? s.connectorH : s.connectorV} />
 
         {/* ── Customer ── */}
         <View style={[s.diagBox, s.diagCustomer]}>
-          <View style={[s.diagIconWrap, { backgroundColor: '#052E16', borderColor: SUCCESS }]}>
-            <ShoppingBag size={24} color={SUCCESS} />
+          <View style={[s.diagIconWrap, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
+            <ShoppingBag size={22} color={SUCCESS} />
           </View>
           <Text style={[s.diagRole, { color: SUCCESS }]}>Customer</Text>
-          <Text style={s.diagRoleJp}>カスタマー</Text>
-          <View style={[s.diagDivider, { borderColor: '#1A3A25' }]} />
-          <View style={s.diagItem}>
-            <Star size={13} color={SUCCESS} style={{ marginRight: 6 }} />
-            <Text style={s.diagItemText}>レビューでお礼を伝える</Text>
-          </View>
-          <TouchableOpacity style={[s.diagCta, { borderColor: SUCCESS + '50', backgroundColor: SUCCESS + '15' }]} activeOpacity={0.85}>
+          <Text style={[s.diagRoleJp, { color: '#15803D' }]}>カスタマー</Text>
+          <View style={[s.diagDivider, { borderColor: '#BBF7D0' }]} />
+          <Text style={[s.diagMainLine, { color: '#14532D' }]}>
+            他のどこにもないデザインをあなたのものに。
+          </Text>
+          <Text style={s.diagBullet}>・最高のオリジナル商品を探し、購入。</Text>
+          <Text style={s.diagBullet}>・レビューをクリエイターに届ける</Text>
+          <TouchableOpacity
+            style={[s.diagCta, { borderColor: SUCCESS + '40', backgroundColor: SUCCESS + '12' }]}
+            activeOpacity={0.85}
+          >
             <Text style={[s.diagCtaText, { color: SUCCESS }]}>商品を探す →</Text>
           </TouchableOpacity>
         </View>
@@ -249,10 +255,10 @@ function HowItWorksSection() {
 // ── Category nav ─────────────────────────────────────────────
 
 const CATEGORIES = [
-  { id: 'all',     label: 'すべて',  emoji: '✦',  color: GOLD,      bg: '#2C1F00' },
-  { id: 'metal',   label: '金属',    emoji: '⚙️',  color: '#94A3B8', bg: '#1E293B' },
-  { id: 'leather', label: '革',      emoji: '🪵',  color: ACCENT,    bg: '#2A1508' },
-  { id: 'glass',   label: 'ガラス',  emoji: '💎',  color: '#67E8F9', bg: '#0C4A6E' },
+  { id: 'all',     label: 'すべて',  emoji: '✦',  color: GOLD,      bg: '#FDF8EC' },
+  { id: 'metal',   label: '金属',    emoji: '⚙️',  color: '#475569', bg: '#F1F5F9' },
+  { id: 'leather', label: '革',      emoji: '🪵',  color: ACCENT,    bg: '#FFF7ED' },
+  { id: 'glass',   label: 'ガラス',  emoji: '💎',  color: '#0369A1', bg: '#F0F9FF' },
 ];
 
 function CategorySection() {
@@ -262,7 +268,7 @@ function CategorySection() {
       <View style={s.sectionHeader}>
         <View style={s.sectionTitleRow}>
           <View style={s.sectionAccentBar} />
-          <Text style={s.sectionTitleDark}>カテゴリーから探す</Text>
+          <Text style={s.sectionTitle}>カテゴリーから探す</Text>
         </View>
       </View>
       <View style={s.catGrid}>
@@ -295,20 +301,20 @@ function PickupSection() {
       <View style={s.sectionHeader}>
         <View style={s.sectionTitleRow}>
           <View style={s.sectionAccentBar} />
-          <Text style={s.sectionTitleDark}>注目のアイテム</Text>
+          <Text style={s.sectionTitle}>注目のアイテム</Text>
         </View>
       </View>
 
       <View style={s.placeholder}>
         <View style={s.placeholderIcon}>
-          <Search size={40} color={GRAY} />
+          <Search size={40} color={TEXT_3} />
         </View>
         <Text style={s.placeholderTitle}>作品を検索して見つけよう</Text>
         <Text style={s.placeholderSub}>
           クリエイターたちのユニークなデザインが{'\n'}近日公開予定です。
         </Text>
         <TouchableOpacity style={s.placeholderBtn} activeOpacity={0.85}>
-          <Search size={15} color={BROWN} style={{ marginRight: 6 }} />
+          <Search size={15} color={CARD} style={{ marginRight: 6 }} />
           <Text style={s.placeholderBtnText}>商品を探す</Text>
         </TouchableOpacity>
         <View style={s.placeholderTags}>
@@ -329,12 +335,12 @@ function Footer() {
   return (
     <View style={s.footer}>
       <View style={s.footerLogoRow}>
-        <View style={s.logoAccent} />
-        <Text style={[s.logoText, { fontSize: 20 }]}>Arte</Text>
-        <View style={s.logoDot} />
+        <View style={[s.logoAccent, { backgroundColor: GOLD_L }]} />
+        <Text style={[s.logoText, { fontSize: 20, color: BG }]}>Arte</Text>
+        <View style={[s.logoDot, { backgroundColor: GOLD_L }]} />
       </View>
       <Text style={s.footerSub}>
-        作り手と使い手を作品がつなぐプラットフォーム
+        クリエイターとカスタマーを作品がつなぐプラットフォーム
       </Text>
       <View style={s.footerLinks}>
         {['利用規約', 'プライバシーポリシー', 'お問い合わせ', 'クリエイターガイド'].map((link) => (
@@ -361,7 +367,7 @@ export default function HomeScreen() {
 
   return (
     <View style={s.root}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Header session={session} />
       <ConnectionBanner />
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent}>
@@ -386,20 +392,20 @@ const s = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 24, paddingVertical: 16,
-    backgroundColor: BG, borderBottomWidth: 1, borderBottomColor: '#2A1508',
+    backgroundColor: CARD, borderBottomWidth: 1, borderBottomColor: BORDER,
   },
   logoRow:    { flexDirection: 'row', alignItems: 'center' },
-  logoAccent: { width: 4, height: 26, backgroundColor: GOLD, borderRadius: 3, marginRight: 8 },
-  logoText:   { color: GOLD_L, fontSize: 26, fontWeight: '900', letterSpacing: 3, fontStyle: 'italic' },
-  logoDot:    { width: 5, height: 5, borderRadius: 3, backgroundColor: GOLD, marginLeft: 3, marginTop: 10 },
+  logoAccent: { width: 4, height: 24, backgroundColor: GOLD_L, borderRadius: 3, marginRight: 8 },
+  logoText:   { color: TEXT, fontSize: 24, fontWeight: '900', letterSpacing: 2 },
+  logoDot:    { width: 5, height: 5, borderRadius: 3, backgroundColor: GOLD_L, marginLeft: 3, marginTop: 10 },
   footerLogoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   headerRight:   { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  userLabel:     { color: GOLD_L, fontSize: 12 },
-  headerLink:    { color: GRAY, fontSize: 13, fontWeight: '600' },
-  headerSignup:  { backgroundColor: GOLD, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
-  headerSignupText: { color: BROWN, fontSize: 13, fontWeight: '700' },
-  logoutBtn:     { borderWidth: 1, borderColor: '#3D2010', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
-  logoutBtnText: { color: GRAY, fontSize: 12 },
+  userLabel:     { color: TEXT_2, fontSize: 12 },
+  headerLink:    { color: TEXT_2, fontSize: 13, fontWeight: '600' },
+  headerSignup:  { backgroundColor: ACCENT, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  headerSignupText: { color: CARD, fontSize: 13, fontWeight: '700' },
+  logoutBtn:     { borderWidth: 1, borderColor: BORDER, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
+  logoutBtnText: { color: TEXT_2, fontSize: 12 },
 
   // Hero
   hero: {
@@ -410,24 +416,24 @@ const s = StyleSheet.create({
   },
   heroTag: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#2C1F00', borderWidth: 1, borderColor: '#4A3510',
+    backgroundColor: '#FDF8EC', borderWidth: 1, borderColor: '#FDE68A',
     alignSelf: 'flex-start',
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
     marginBottom: 24,
   },
   heroTagText: { color: GOLD, fontSize: 11, fontWeight: '600' },
   heroTitle: {
-    color: WHITE,
-    fontSize: isWeb ? 58 : 34,
+    color: TEXT,
+    fontSize: isWeb ? 52 : 30,
     fontWeight: '900',
-    lineHeight: isWeb ? 74 : 48,
+    lineHeight: isWeb ? 68 : 44,
     marginBottom: 20,
     letterSpacing: -0.5,
   },
   heroSub: {
-    color: '#C8B8A8',
-    fontSize: isWeb ? 20 : 16,
-    lineHeight: 30,
+    color: TEXT_2,
+    fontSize: isWeb ? 18 : 15,
+    lineHeight: 28,
     marginBottom: 36,
     maxWidth: 500,
   },
@@ -435,34 +441,37 @@ const s = StyleSheet.create({
   // Search
   searchWrap: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#231309',
-    borderWidth: 1.5, borderColor: '#4A3020',
+    backgroundColor: CARD,
+    borderWidth: 1.5, borderColor: BORDER,
     borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: Platform.OS === 'web' ? 14 : 10,
     marginBottom: 12,
     maxWidth: 600,
     gap: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
   },
   searchInput: {
-    flex: 1, color: WHITE, fontSize: 15,
+    flex: 1, color: TEXT, fontSize: 15,
     height: Platform.OS === 'web' ? 'auto' as any : 36,
   },
   searchBtn: {
-    backgroundColor: GOLD, borderRadius: 10,
+    backgroundColor: ACCENT, borderRadius: 10,
     paddingHorizontal: 18, paddingVertical: 8,
   },
-  searchBtnText: { color: BROWN, fontWeight: '800', fontSize: 14 },
+  searchBtnText: { color: CARD, fontWeight: '800', fontSize: 14 },
 
   // Search hints
   searchHints: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 32, maxWidth: 600,
   },
   hintChip: {
-    borderWidth: 1, borderColor: '#4A3020',
+    borderWidth: 1, borderColor: BORDER,
+    backgroundColor: CARD,
     paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20,
   },
-  hintText: { color: '#8B7355', fontSize: 12 },
+  hintText: { color: TEXT_2, fontSize: 12 },
 
   // CTA
   ctaRow: {
@@ -472,20 +481,20 @@ const s = StyleSheet.create({
   },
   ctaPrimary: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: GOLD,
+    backgroundColor: ACCENT,
     paddingHorizontal: 36, paddingVertical: 18,
     borderRadius: 16, alignSelf: isWeb ? 'auto' : 'stretch',
-    shadowColor: GOLD, shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4, shadowRadius: 16, elevation: 8,
+    shadowColor: ACCENT, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,
   },
-  ctaPrimaryText: { color: BROWN, fontSize: 16, fontWeight: '800' },
+  ctaPrimaryText: { color: CARD, fontSize: 16, fontWeight: '800' },
   ctaSecondary: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: 'rgba(212,160,23,0.35)',
+    borderWidth: 1.5, borderColor: ACCENT,
     paddingHorizontal: 36, paddingVertical: 18,
     borderRadius: 16, alignSelf: isWeb ? 'auto' : 'stretch',
   },
-  ctaSecondaryText: { color: GOLD_L, fontSize: 16, fontWeight: '600' },
+  ctaSecondaryText: { color: ACCENT, fontSize: 16, fontWeight: '600' },
 
   // Section commons
   sectionHeader: {
@@ -494,10 +503,10 @@ const s = StyleSheet.create({
   },
   sectionTitleRow:  { flexDirection: 'row', alignItems: 'center' },
   sectionAccentBar: { width: 4, height: 22, backgroundColor: ACCENT, borderRadius: 2, marginRight: 12 },
-  sectionTitleDark: { color: BROWN, fontSize: isWeb ? 22 : 19, fontWeight: '800' },
+  sectionTitle:     { color: TEXT, fontSize: isWeb ? 22 : 19, fontWeight: '800' },
 
   // Category
-  catSection: { backgroundColor: CREAM, paddingTop: 48, paddingBottom: 40 },
+  catSection: { backgroundColor: BG_ALT, paddingTop: 48, paddingBottom: 40 },
   catGrid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 12,
     paddingHorizontal: isWeb ? 64 : 20,
@@ -507,162 +516,157 @@ const s = StyleSheet.create({
     width: isWeb ? 140 : undefined,
     minWidth: 70,
     alignItems: 'center',
-    backgroundColor: WHITE,
+    backgroundColor: CARD,
     borderRadius: 20,
     paddingVertical: 18, paddingHorizontal: 12,
-    borderWidth: 1.5, borderColor: GRAY_L,
-    shadowColor: BROWN, shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.07, shadowRadius: 8, elevation: 2,
+    borderWidth: 1.5, borderColor: BORDER,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05, shadowRadius: 6, elevation: 1,
   },
   catIconWrap: {
     width: 52, height: 52, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center', marginBottom: 8,
   },
   catEmoji: { fontSize: 22 },
-  catLabel: { color: BROWN, fontSize: 13, fontWeight: '700' },
+  catLabel: { color: TEXT, fontSize: 13, fontWeight: '700' },
 
   // How it works
   howSection: {
     backgroundColor: BG,
     paddingTop: 56, paddingBottom: 64,
+    borderTopWidth: 1, borderTopColor: BORDER,
   },
   howHeader: {
     paddingHorizontal: isWeb ? 64 : 20,
     marginBottom: 40,
   },
   sectionAccentLine: {
-    width: 40, height: 3, backgroundColor: GOLD,
+    width: 40, height: 3, backgroundColor: GOLD_L,
     borderRadius: 2, marginBottom: 16,
   },
   howTitle: {
-    color: CREAM2, fontSize: isWeb ? 28 : 22,
+    color: TEXT, fontSize: isWeb ? 28 : 22,
     fontWeight: '900', marginBottom: 8,
   },
-  howSubtitle: { color: '#6B5B4B', fontSize: 14 },
+  howSubtitle: { color: TEXT_2, fontSize: 14 },
 
   // Diagram layout
   diagram: {
-    paddingHorizontal: isWeb ? 64 : 16,
+    paddingHorizontal: isWeb ? 64 : 20,
   },
   diagramWeb: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   diagramCaption: {
-    color: '#4A3020', fontSize: 12, textAlign: 'center',
+    color: TEXT_3, fontSize: 12, textAlign: 'center',
     marginTop: 28, paddingHorizontal: isWeb ? 64 : 24,
     lineHeight: 18,
   },
 
-  // Connector lines (simple bars, no arrows)
+  // Connector lines
   connectorH: {
-    // horizontal line between boxes on web
-    height: 2,
-    width: 24,
-    backgroundColor: BROWN3,
+    width: 28, height: 2,
+    backgroundColor: BORDER,
     flexShrink: 0,
   },
   connectorV: {
-    // vertical line between boxes on mobile
-    width: 2,
-    height: 20,
-    backgroundColor: BROWN3,
+    width: 2, height: 20,
+    backgroundColor: BORDER,
     alignSelf: 'center',
   },
 
-  // Diagram boxes
+  // Diagram boxes — squares on web, auto-height on mobile
   diagBox: {
     borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
+    padding: 18,
+    borderWidth: 1.5,
+    overflow: 'hidden',
   },
-  // Creator: flex 2 (large)
   diagCreator: {
-    flex: isWeb ? 2 : undefined,
-    backgroundColor: '#1C1200', borderColor: '#3D2E00',
+    width: isWeb ? SQ_LARGE : undefined,
+    height: isWeb ? SQ_LARGE : undefined,
+    backgroundColor: '#FFFBEB', borderColor: '#FDE68A',
     marginBottom: isWeb ? 0 : 0,
   },
-  // Arte center: flex 1 (small)
   diagCraft: {
-    flex: isWeb ? 1 : undefined,
-    backgroundColor: '#1C0D00', borderColor: '#4A2000',
-    marginHorizontal: isWeb ? 0 : 0,
-    marginVertical: isWeb ? 0 : 0,
+    width: isWeb ? SQ_SMALL : undefined,
+    height: isWeb ? SQ_SMALL : undefined,
+    backgroundColor: '#FFF7ED', borderColor: '#FED7AA',
   },
-  // Customer: flex 2 (large)
   diagCustomer: {
-    flex: isWeb ? 2 : undefined,
-    backgroundColor: '#071A10', borderColor: '#0F3020',
+    width: isWeb ? SQ_LARGE : undefined,
+    height: isWeb ? SQ_LARGE : undefined,
+    backgroundColor: '#F0FDF4', borderColor: '#BBF7D0',
   },
 
   diagIconWrap: {
-    width: 48, height: 48, borderRadius: 14,
+    width: 42, height: 42, borderRadius: 12,
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: 10, borderWidth: 1,
+    marginBottom: 8, borderWidth: 1,
   },
-  diagRole:    { color: WHITE, fontSize: 16, fontWeight: '900', marginBottom: 2 },
-  diagRoleJp:  { color: '#6B5B4B', fontSize: 11, marginBottom: 12 },
-  diagDivider: { borderTopWidth: 1, borderColor: '#2A1A00', marginBottom: 12 },
-  diagItem:    { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  diagItemText:{ color: '#8B7355', fontSize: 12 },
+  diagRole:    { fontSize: 16, fontWeight: '900', marginBottom: 1 },
+  diagRoleJp:  { fontSize: 10, marginBottom: 8 },
+  diagDivider: { borderTopWidth: 1, marginBottom: 10 },
+  diagMainLine:{ fontSize: 11, lineHeight: 16, marginBottom: 6, fontWeight: '600' },
+  diagBullet:  { color: TEXT_2, fontSize: 11, lineHeight: 17 },
   diagCta: {
-    marginTop: 14,
-    borderWidth: 1, borderColor: GOLD + '40',
-    backgroundColor: GOLD + '15',
-    paddingVertical: 9, borderRadius: 10,
+    marginTop: 10,
+    borderWidth: 1, borderColor: GOLD_L + '60',
+    backgroundColor: '#FDF8EC',
+    paddingVertical: 7, borderRadius: 8,
     alignItems: 'center',
   },
-  diagCtaText: { color: GOLD, fontSize: 12, fontWeight: '700' },
-
-  craftDesc: {
-    color: '#A87050', fontSize: 12, lineHeight: 18,
-  },
+  diagCtaText: { color: GOLD, fontSize: 11, fontWeight: '700' },
+  craftDesc:   { fontSize: 11, lineHeight: 17 },
 
   // Pickup / placeholder
-  pickupSection: { backgroundColor: CREAM, paddingTop: 48, paddingBottom: 64 },
+  pickupSection: { backgroundColor: BG_ALT, paddingTop: 48, paddingBottom: 64 },
   placeholder: {
     marginHorizontal: isWeb ? 64 : 20,
-    backgroundColor: WHITE,
+    backgroundColor: CARD,
     borderRadius: 24,
     padding: 48,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: GRAY_L,
+    borderColor: BORDER,
     borderStyle: 'dashed',
   },
   placeholderIcon: {
     width: 80, height: 80, borderRadius: 24,
-    backgroundColor: '#F5F5F4',
+    backgroundColor: BG_ALT,
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 20,
   },
   placeholderTitle: {
-    color: BROWN, fontSize: 18, fontWeight: '800', marginBottom: 10,
+    color: TEXT, fontSize: 18, fontWeight: '800', marginBottom: 10,
   },
   placeholderSub: {
-    color: GRAY, fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 24,
+    color: TEXT_2, fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 24,
   },
   placeholderBtn: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: GOLD,
+    backgroundColor: ACCENT,
     paddingHorizontal: 28, paddingVertical: 13, borderRadius: 12,
     marginBottom: 24,
   },
-  placeholderBtnText: { color: BROWN, fontWeight: '800', fontSize: 15 },
+  placeholderBtnText: { color: CARD, fontWeight: '800', fontSize: 15 },
   placeholderTags: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
   placeholderTag: {
-    borderWidth: 1, borderColor: GRAY_L,
+    borderWidth: 1, borderColor: BORDER,
     paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20,
   },
-  placeholderTagText: { color: GRAY, fontSize: 12 },
+  placeholderTagText: { color: TEXT_2, fontSize: 12 },
 
   // Footer
   footer: {
-    backgroundColor: BG, alignItems: 'center',
+    backgroundColor: TEXT, alignItems: 'center',
     paddingVertical: 48, paddingHorizontal: 24, gap: 10,
   },
-  footerSub:   { color: '#4A3020', fontSize: 13, textAlign: 'center' },
+  footerSub:   { color: TEXT_3, fontSize: 13, textAlign: 'center' },
   footerLinks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
-  footerLink:  { color: '#4A3020', fontSize: 12 },
-  footerCopy:  { color: '#2A1508', fontSize: 11, marginTop: 4 },
+  footerLink:  { color: TEXT_3, fontSize: 12 },
+  footerCopy:  { color: '#44403C', fontSize: 11, marginTop: 4 },
+  // footer logo reuses header logo styles but on dark bg:
 });
