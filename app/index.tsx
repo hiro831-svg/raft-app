@@ -14,8 +14,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import type { Session } from '@supabase/supabase-js';
 import {
-  Search, ChevronRight, Lightbulb, Hammer, ShoppingBag,
-  Sparkles, Package, Heart, Star, Truck, ArrowRight,
+  Search, Lightbulb, Hammer, ShoppingBag,
+  Sparkles, Package, Heart, Star, Truck,
   Pencil, DollarSign, Image as ImageIcon,
 } from 'lucide-react-native';
 import { supabase, checkConnection, type ConnectionStatus } from '../src/lib/supabase';
@@ -25,6 +25,7 @@ import { supabase, checkConnection, type ConnectionStatus } from '../src/lib/sup
 const { width } = Dimensions.get('window');
 const isWeb     = width > 700;
 
+const BG      = '#261710';   // unified background
 const BROWN   = '#1a0f0a';
 const BROWN2  = '#231309';
 const BROWN3  = '#3D2010';
@@ -79,14 +80,12 @@ function Header({ session }: { session: Session | null }) {
   }
   return (
     <View style={s.header}>
-      {/* Logo */}
       <TouchableOpacity style={s.logoRow} activeOpacity={0.85}>
         <View style={s.logoAccent} />
         <Text style={s.logoText}>Arte</Text>
         <View style={s.logoDot} />
       </TouchableOpacity>
 
-      {/* Auth */}
       {session ? (
         <View style={s.headerRight}>
           <Text style={s.userLabel}>{session.user.email?.split('@')[0]}</Text>
@@ -123,7 +122,7 @@ function HeroSection() {
 
       {/* Main headline */}
       <Text style={s.heroTitle}>
-        どこにもないデザインを、{'\n'}あなたが作り{'\n'}あなたが使う
+        {'どこにもないデザインを、\nあなたが作り　あなたが使う'}
       </Text>
 
       {/* Sub copy */}
@@ -156,30 +155,16 @@ function HeroSection() {
         ))}
       </View>
 
-      {/* CTA buttons */}
+      {/* CTA buttons — 左: 出品, 右: 購入 */}
       <View style={s.ctaRow}>
-        <TouchableOpacity style={s.ctaPrimary} activeOpacity={0.88}>
-          <ShoppingBag size={18} color={BROWN} style={{ marginRight: 8 }} />
-          <Text style={s.ctaPrimaryText}>商品を探す</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={s.ctaSecondary} activeOpacity={0.88}>
           <Pencil size={16} color={GOLD_L} style={{ marginRight: 8 }} />
           <Text style={s.ctaSecondaryText}>デザインを出品する</Text>
         </TouchableOpacity>
-      </View>
-
-      {/* Stats */}
-      <View style={s.statsRow}>
-        {[
-          { value: '2,400+', label: 'クリエイター' },
-          { value: '18,000+', label: '商品数' },
-          { value: '4.9 ★',  label: '平均評価' },
-        ].map((stat) => (
-          <View key={stat.label} style={s.statItem}>
-            <Text style={s.statValue}>{stat.value}</Text>
-            <Text style={s.statLabel}>{stat.label}</Text>
-          </View>
-        ))}
+        <TouchableOpacity style={s.ctaPrimary} activeOpacity={0.88}>
+          <ShoppingBag size={18} color={BROWN} style={{ marginRight: 8 }} />
+          <Text style={s.ctaPrimaryText}>商品を探す</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -194,7 +179,7 @@ function HowItWorksSection() {
       <View style={s.howHeader}>
         <View style={s.sectionAccentLine} />
         <Text style={s.howTitle}>Arteの仕組み</Text>
-        <Text style={s.howSubtitle}>クリエイターとバイヤーを、職人の技がつなぐ</Text>
+        <Text style={s.howSubtitle}>クリエイターとカスタマーを、職人の技がつなぐ</Text>
       </View>
 
       {/* Diagram */}
@@ -208,100 +193,45 @@ function HowItWorksSection() {
           <Text style={[s.diagRole, { color: GOLD }]}>Creator</Text>
           <Text style={s.diagRoleJp}>クリエイター</Text>
           <View style={s.diagDivider} />
-          {[
-            { Icon: ImageIcon,   text: 'デザインを投稿' },
-            { Icon: DollarSign,  text: '利益マージンを設定' },
-            { Icon: Star,        text: '作品を世界に公開' },
-          ].map(({ Icon, text }) => (
-            <View key={text} style={s.diagItem}>
-              <Icon size={13} color={GOLD} style={{ marginRight: 6 }} />
-              <Text style={s.diagItemText}>{text}</Text>
-            </View>
-          ))}
+          <View style={s.diagItem}>
+            <DollarSign size={13} color={GOLD} style={{ marginRight: 6 }} />
+            <Text style={s.diagItemText}>価格を設定</Text>
+          </View>
           <TouchableOpacity style={s.diagCta} activeOpacity={0.85}>
             <Text style={s.diagCtaText}>出品を始める →</Text>
           </TouchableOpacity>
         </View>
 
-        {/* ── Arrow / connector ── */}
-        {isWeb ? (
-          <View style={s.arrowWrap}>
-            <View style={s.arrowLine} />
-            <ArrowRight size={20} color={GOLD} />
-          </View>
-        ) : (
-          <View style={s.arrowDown}>
-            <Text style={s.arrowDownText}>↓</Text>
-          </View>
-        )}
+        {/* ── Connector line ── */}
+        <View style={isWeb ? s.connectorH : s.connectorV} />
 
-        {/* ── Arte Craft (center) ── */}
+        {/* ── Arte (center, small) ── */}
         <View style={[s.diagBox, s.diagCraft]}>
-          <View style={s.craftBadge}>
-            <Text style={s.craftBadgeText}>中心</Text>
+          <View style={[s.diagIconWrap, { backgroundColor: '#2A1200', borderColor: ACCENT }]}>
+            <Hammer size={22} color={ACCENT} />
           </View>
-          <View style={[s.diagIconWrap, { backgroundColor: '#2A1200', borderColor: ACCENT, width: 64, height: 64 }]}>
-            <Hammer size={30} color={ACCENT} />
-          </View>
-          <Text style={[s.diagRole, { color: ACCENT, fontSize: 20 }]}>Arte Craft</Text>
-          <Text style={[s.diagRoleJp, { color: '#A87050' }]}>製造・発送</Text>
+          <Text style={[s.diagRole, { color: ACCENT }]}>Arte</Text>
           <View style={[s.diagDivider, { borderColor: '#3D2010' }]} />
-
-          {/* Material badges */}
-          <View style={s.materialRow}>
-            {[
-              { label: '⚙️ 金属', color: '#94A3B8', bg: '#1E293B' },
-              { label: '🪵 革',   color: ACCENT,    bg: '#2A1508' },
-              { label: '💎 ガラス', color: '#67E8F9', bg: '#0C4A6E' },
-            ].map((m) => (
-              <View key={m.label} style={[s.matBadge, { backgroundColor: m.bg, borderColor: m.color + '60' }]}>
-                <Text style={[s.matBadgeText, { color: m.color }]}>{m.label}</Text>
-              </View>
-            ))}
-          </View>
-
-          {[
-            { Icon: Hammer,  text: '高品質な彫刻・加工' },
-            { Icon: Package, text: '丁寧な梱包' },
-            { Icon: Truck,   text: '全国発送対応' },
-          ].map(({ Icon, text }) => (
-            <View key={text} style={s.diagItem}>
-              <Icon size={13} color={ACCENT} style={{ marginRight: 6 }} />
-              <Text style={[s.diagItemText, { color: '#C8A96E' }]}>{text}</Text>
-            </View>
-          ))}
+          <Text style={s.craftDesc}>
+            洗練されたレーザー彫刻・加工でデザインを実現
+          </Text>
         </View>
 
-        {/* ── Arrow / connector ── */}
-        {isWeb ? (
-          <View style={s.arrowWrap}>
-            <View style={s.arrowLine} />
-            <ArrowRight size={20} color={GOLD} />
-          </View>
-        ) : (
-          <View style={s.arrowDown}>
-            <Text style={s.arrowDownText}>↓</Text>
-          </View>
-        )}
+        {/* ── Connector line ── */}
+        <View style={isWeb ? s.connectorH : s.connectorV} />
 
-        {/* ── Buyer ── */}
-        <View style={[s.diagBox, s.diagBuyer]}>
+        {/* ── Customer ── */}
+        <View style={[s.diagBox, s.diagCustomer]}>
           <View style={[s.diagIconWrap, { backgroundColor: '#052E16', borderColor: SUCCESS }]}>
             <ShoppingBag size={24} color={SUCCESS} />
           </View>
-          <Text style={[s.diagRole, { color: SUCCESS }]}>Buyer</Text>
-          <Text style={s.diagRoleJp}>バイヤー</Text>
+          <Text style={[s.diagRole, { color: SUCCESS }]}>Customer</Text>
+          <Text style={s.diagRoleJp}>カスタマー</Text>
           <View style={[s.diagDivider, { borderColor: '#1A3A25' }]} />
-          {[
-            { Icon: Search,   text: '作品を探す・購入する' },
-            { Icon: Heart,    text: '世界に一つのアイテム' },
-            { Icon: Star,     text: 'レビューでお礼を伝える' },
-          ].map(({ Icon, text }) => (
-            <View key={text} style={s.diagItem}>
-              <Icon size={13} color={SUCCESS} style={{ marginRight: 6 }} />
-              <Text style={s.diagItemText}>{text}</Text>
-            </View>
-          ))}
+          <View style={s.diagItem}>
+            <Star size={13} color={SUCCESS} style={{ marginRight: 6 }} />
+            <Text style={s.diagItemText}>レビューでお礼を伝える</Text>
+          </View>
           <TouchableOpacity style={[s.diagCta, { borderColor: SUCCESS + '50', backgroundColor: SUCCESS + '15' }]} activeOpacity={0.85}>
             <Text style={[s.diagCtaText, { color: SUCCESS }]}>商品を探す →</Text>
           </TouchableOpacity>
@@ -309,7 +239,6 @@ function HowItWorksSection() {
 
       </View>
 
-      {/* Flow caption */}
       <Text style={s.diagramCaption}>
         クリエイターの売上はArteが自動で精算。面倒な製造・発送はすべて当社が担当します。
       </Text>
@@ -320,10 +249,10 @@ function HowItWorksSection() {
 // ── Category nav ─────────────────────────────────────────────
 
 const CATEGORIES = [
-  { id: 'all',     label: 'すべて',    emoji: '✦',  color: GOLD,      bg: '#2C1F00' },
-  { id: 'metal',   label: '金属',      emoji: '⚙️',  color: '#94A3B8', bg: '#1E293B' },
-  { id: 'leather', label: '革',        emoji: '🪵',  color: ACCENT,    bg: '#2A1508' },
-  { id: 'glass',   label: 'ガラス',    emoji: '💎',  color: '#67E8F9', bg: '#0C4A6E' },
+  { id: 'all',     label: 'すべて',  emoji: '✦',  color: GOLD,      bg: '#2C1F00' },
+  { id: 'metal',   label: '金属',    emoji: '⚙️',  color: '#94A3B8', bg: '#1E293B' },
+  { id: 'leather', label: '革',      emoji: '🪵',  color: ACCENT,    bg: '#2A1508' },
+  { id: 'glass',   label: 'ガラス',  emoji: '💎',  color: '#67E8F9', bg: '#0C4A6E' },
 ];
 
 function CategorySection() {
@@ -370,7 +299,6 @@ function PickupSection() {
         </View>
       </View>
 
-      {/* Placeholder */}
       <View style={s.placeholder}>
         <View style={s.placeholderIcon}>
           <Search size={40} color={GRAY} />
@@ -383,8 +311,6 @@ function PickupSection() {
           <Search size={15} color={BROWN} style={{ marginRight: 6 }} />
           <Text style={s.placeholderBtnText}>商品を探す</Text>
         </TouchableOpacity>
-
-        {/* Hint tags */}
         <View style={s.placeholderTags}>
           {['#刻印', '#名入れ', '#革財布', '#表札', '#ガラス彫刻'].map((tag) => (
             <View key={tag} style={s.placeholderTag}>
@@ -452,7 +378,7 @@ export default function HomeScreen() {
 // ── Styles ───────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  root:          { flex: 1, backgroundColor: BROWN },
+  root:          { flex: 1, backgroundColor: BG },
   scroll:        { flex: 1 },
   scrollContent: { paddingBottom: 0 },
 
@@ -460,7 +386,7 @@ const s = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 24, paddingVertical: 16,
-    backgroundColor: BROWN, borderBottomWidth: 1, borderBottomColor: '#2A1508',
+    backgroundColor: BG, borderBottomWidth: 1, borderBottomColor: '#2A1508',
   },
   logoRow:    { flexDirection: 'row', alignItems: 'center' },
   logoAccent: { width: 4, height: 26, backgroundColor: GOLD, borderRadius: 3, marginRight: 8 },
@@ -477,7 +403,7 @@ const s = StyleSheet.create({
 
   // Hero
   hero: {
-    backgroundColor: BROWN,
+    backgroundColor: BG,
     paddingHorizontal: isWeb ? 72 : 24,
     paddingTop: isWeb ? 80 : 52,
     paddingBottom: 60,
@@ -541,7 +467,7 @@ const s = StyleSheet.create({
   // CTA
   ctaRow: {
     flexDirection: isWeb ? 'row' : 'column',
-    gap: 14, marginBottom: 48,
+    gap: 14,
     alignItems: isWeb ? 'center' : 'stretch',
   },
   ctaPrimary: {
@@ -560,16 +486,6 @@ const s = StyleSheet.create({
     borderRadius: 16, alignSelf: isWeb ? 'auto' : 'stretch',
   },
   ctaSecondaryText: { color: GOLD_L, fontSize: 16, fontWeight: '600' },
-
-  // Stats
-  statsRow: {
-    flexDirection: 'row', gap: isWeb ? 56 : 28,
-    paddingTop: 28,
-    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.07)',
-  },
-  statItem:  { alignItems: 'flex-start' },
-  statValue: { color: GOLD_L, fontSize: isWeb ? 28 : 22, fontWeight: '900' },
-  statLabel: { color: '#6B5B4B', fontSize: 12, marginTop: 3 },
 
   // Section commons
   sectionHeader: {
@@ -607,7 +523,7 @@ const s = StyleSheet.create({
 
   // How it works
   howSection: {
-    backgroundColor: BROWN2,
+    backgroundColor: BG,
     paddingTop: 56, paddingBottom: 64,
   },
   howHeader: {
@@ -624,13 +540,13 @@ const s = StyleSheet.create({
   },
   howSubtitle: { color: '#6B5B4B', fontSize: 14 },
 
-  // Diagram
+  // Diagram layout
   diagram: {
     paddingHorizontal: isWeb ? 64 : 16,
-    gap: 0,
   },
   diagramWeb: {
-    flexDirection: 'row', alignItems: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   diagramCaption: {
     color: '#4A3020', fontSize: 12, textAlign: 'center',
@@ -638,67 +554,69 @@ const s = StyleSheet.create({
     lineHeight: 18,
   },
 
+  // Connector lines (simple bars, no arrows)
+  connectorH: {
+    // horizontal line between boxes on web
+    height: 2,
+    width: 24,
+    backgroundColor: BROWN3,
+    flexShrink: 0,
+  },
+  connectorV: {
+    // vertical line between boxes on mobile
+    width: 2,
+    height: 20,
+    backgroundColor: BROWN3,
+    alignSelf: 'center',
+  },
+
   // Diagram boxes
   diagBox: {
-    flex: isWeb ? 1 : undefined,
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     borderWidth: 1,
+  },
+  // Creator: flex 2 (large)
+  diagCreator: {
+    flex: isWeb ? 2 : undefined,
+    backgroundColor: '#1C1200', borderColor: '#3D2E00',
     marginBottom: isWeb ? 0 : 0,
   },
-  diagCreator: {
-    backgroundColor: '#1C1200', borderColor: '#3D2E00',
-  },
+  // Arte center: flex 1 (small)
   diagCraft: {
+    flex: isWeb ? 1 : undefined,
     backgroundColor: '#1C0D00', borderColor: '#4A2000',
-    flex: isWeb ? 1.3 : undefined,
-    marginHorizontal: isWeb ? 8 : 0,
-    marginVertical: isWeb ? 0 : 8,
+    marginHorizontal: isWeb ? 0 : 0,
+    marginVertical: isWeb ? 0 : 0,
   },
-  diagBuyer: {
+  // Customer: flex 2 (large)
+  diagCustomer: {
+    flex: isWeb ? 2 : undefined,
     backgroundColor: '#071A10', borderColor: '#0F3020',
   },
-  craftBadge: {
-    position: 'absolute', top: 14, right: 14,
-    backgroundColor: ACCENT + '20', borderWidth: 1, borderColor: ACCENT + '40',
-    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8,
-  },
-  craftBadgeText: { color: ACCENT, fontSize: 10, fontWeight: '700' },
 
   diagIconWrap: {
-    width: 52, height: 52, borderRadius: 16,
+    width: 48, height: 48, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: 12, borderWidth: 1,
+    marginBottom: 10, borderWidth: 1,
   },
-  diagRole:   { color: WHITE, fontSize: 18, fontWeight: '900', marginBottom: 2 },
-  diagRoleJp: { color: '#6B5B4B', fontSize: 12, marginBottom: 14 },
-  diagDivider:{ borderTopWidth: 1, borderColor: '#2A1A00', marginBottom: 14 },
-  diagItem:   { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  diagItemText:{ color: '#8B7355', fontSize: 13 },
+  diagRole:    { color: WHITE, fontSize: 16, fontWeight: '900', marginBottom: 2 },
+  diagRoleJp:  { color: '#6B5B4B', fontSize: 11, marginBottom: 12 },
+  diagDivider: { borderTopWidth: 1, borderColor: '#2A1A00', marginBottom: 12 },
+  diagItem:    { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+  diagItemText:{ color: '#8B7355', fontSize: 12 },
   diagCta: {
-    marginTop: 16,
+    marginTop: 14,
     borderWidth: 1, borderColor: GOLD + '40',
     backgroundColor: GOLD + '15',
-    paddingVertical: 10, borderRadius: 10,
+    paddingVertical: 9, borderRadius: 10,
     alignItems: 'center',
   },
-  diagCtaText: { color: GOLD, fontSize: 13, fontWeight: '700' },
+  diagCtaText: { color: GOLD, fontSize: 12, fontWeight: '700' },
 
-  materialRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 14 },
-  matBadge: {
-    paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: 8, borderWidth: 1,
+  craftDesc: {
+    color: '#A87050', fontSize: 12, lineHeight: 18,
   },
-  matBadgeText: { fontSize: 12, fontWeight: '600' },
-
-  // Arrows
-  arrowWrap: {
-    alignItems: 'center', justifyContent: 'center',
-    flexDirection: 'row', paddingHorizontal: 4,
-  },
-  arrowLine: { flex: 1, height: 1, backgroundColor: '#3D2010' },
-  arrowDown: { alignItems: 'center', paddingVertical: 8 },
-  arrowDownText: { color: '#3D2010', fontSize: 24 },
 
   // Pickup / placeholder
   pickupSection: { backgroundColor: CREAM, paddingTop: 48, paddingBottom: 64 },
@@ -740,7 +658,7 @@ const s = StyleSheet.create({
 
   // Footer
   footer: {
-    backgroundColor: BROWN, alignItems: 'center',
+    backgroundColor: BG, alignItems: 'center',
     paddingVertical: 48, paddingHorizontal: 24, gap: 10,
   },
   footerSub:   { color: '#4A3020', fontSize: 13, textAlign: 'center' },
